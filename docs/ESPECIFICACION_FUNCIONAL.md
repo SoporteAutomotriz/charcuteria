@@ -205,13 +205,13 @@ Banderas adicionales: **esperando\_cliente** (se pidió información) y **lista\
 
 **Stack:** Next.js con TypeScript y Tailwind; Supabase (Postgres, Auth, RLS); Resend; Cloudflare para DNS y Turnstile.
 
-**Hosting (se decide en la Fase 1):** una prueba técnica con tres criterios: que despliegue, que lea Supabase desde el servidor y que el formulario con Turnstile funcione.
+**Hosting (decisión Fase 1 — ver docs/decisiones/001-hosting.md):** una prueba técnica con tres criterios: que despliegue, que lea Supabase desde el servidor y que el formulario con Turnstile funcione.
 
-- Opción A: vinext en Cloudflare Workers, la ruta que Cloudflare recomienda hoy para apps nuevas de Next.js, aunque es una pieza joven.
-- Opción B: Vercel, donde Next.js corre de forma nativa. Revisar las condiciones de uso comercial del plan.
-- Opción C: OpenNext en Workers, solo si A y B fallan.
+- Opción A: vinext en Cloudflare Workers — **descartada**. El adaptador `@cloudflare/next-on-pages` está archivado y obsoleto desde septiembre de 2025, y el build estándar de Next.js no es servible directamente por Cloudflare Pages (404).
+- Opción B: Vercel — **adoptada**. Next.js corre de forma nativa, no requiere adaptador adicional. Revisar las condiciones de uso comercial del plan.
+- Opción C: OpenNext en Workers — solo si A y B fallan.
 
-Se documenta la decisión y su causa. El código evita APIs específicas de una plataforma para poder cambiar de hosting.
+Se documenta la decisión y su causa en docs/decisiones/001-hosting.md. El código evita APIs específicas de una plataforma para poder cambiar de hosting.
 
 **Calidad:** pruebas unitarias del motor, pruebas de RLS, pruebas de punta a punta del flujo principal con Playwright, datos ficticios en desarrollo y migraciones versionadas y reversibles.
 

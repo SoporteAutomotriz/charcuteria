@@ -1,8 +1,0 @@
-name = "charcuteria"
-main = "src/app/hosting-test/page.tsx"
-compatibility_date = "2026-11-06"
-account_id = "13a7f1227fe98ea9bcb439c738f966ba"
-
-[vars]
-NEXT_PUBLIC_SUPABASE_URL = "https://nyhcvgavbgextwempjcc.supabase.co"
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_aBJQMnkLb0GsKn-IvSwLEA_kw0CEsEt"
