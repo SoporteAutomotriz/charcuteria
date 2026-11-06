@@ -1,0 +1,7 @@
+.obsidian/workspace*.json
+.obsidian/cache
+.obsidian/plugins/
+.state.json
+daily/**/transcript-*.md
+daily/**/memory/
+daily/**/memoria/

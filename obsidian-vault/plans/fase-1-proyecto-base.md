@@ -13,8 +13,10 @@ Estado: en-progreso
    - Resultado: ESLint, tsc --noEmit, Vitest configurados y en verde.
 4. [x] Completar sección Comandos de CLAUDE.md
    - Resultado: scripts dev/build/start/lint/typecheck/test añadidos.
-5. [ ] Probar opciones A y B de hosting con caso mínimo (página, lectura Supabase desde servidor, formulario Turnstile)
-   - Bloqueado: faltan credenciales de Supabase y clave de Turnstile.
+5. [x] Probar opción A de hosting (Cloudflare Pages)
+   - Resultado: build exitoso, deploy ejecutado en https://bc534542.charcuteria.pages.dev
+   - Pendiente: verificar que la página cargue contenido en producción
+   - Problema conocido: wrangler.toml ignorado por falta de pages_build_output_dir; .next no es formato nativo de Pages
 6. [ ] Documentar decisión en docs/decisiones/001-hosting.md
 7. [ ] Preparar README con instrucciones para ejecutar en local
 
@@ -22,8 +24,8 @@ Estado: en-progreso
 
 Decisión de hosting documentada (sección 14 de la especificación).
 
-## Próximos pasos al desbloquear
+## Próximos pasos
 
-- Recibir credenciales/proyecto de Supabase y clave de Cloudflare Turnstile.
-- Ejecutar prueba de hosting (opción A: vinext en Cloudflare Workers; opción B: Vercel).
-- Crear docs/decisiones/001-hosting.md con recomendación.
+- Depurar por qué la página desplegada en Cloudflare Pages no muestra nada
+- Crear docs/decisiones/001-hosting.md con decisión y justificación
+- Preparar README con instrucciones para ejecutar en local

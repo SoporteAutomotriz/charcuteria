@@ -32,7 +32,8 @@ Update this section every time you return to this vault. **Last updated:** 05-11
 
 ### Focus right now
 
-- Verificar que el formulario de Turnstile en `/turnstile` envíe correctamente tras corregir URL del endpoint a `/api/turnstile`
+- Paso 3: pruebas de hosting (opción A: vinext en Cloudflare Workers; opción B: Vercel)
+- Necesario: cuenta de Cloudflare para Workers y cuenta de Vercel
 - `docs/decisiones/001-hosting.md` — documento de decisión de hosting (pendiente de credenciales)
 
 ## Key Decisions Made
