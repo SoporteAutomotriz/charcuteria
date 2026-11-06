@@ -1,0 +1,89 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+export default function HostingTestPage() {
+  const [data, setData] = useState<unknown>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/supabase-test")
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((json) => {
+        if (!cancelled) {
+          setData(json.data);
+          setError(json.error ?? null);
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : "Error desconocido");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-xl font-bold mb-4">Prueba de Hosting — Fase 1</h1>
+
+      <section className="mb-8">
+        <h2 className="text-lg font-semibold mb-2">1. Lectura de Supabase desde el servidor</h2>
+        {error ? (
+          <div className="p-3 bg-red-50 text-red-700 rounded border border-red-100">
+            <p className="text-sm">Error: {error}</p>
+            <p className="text-xs mt-1 text-red-600">
+              Verifica que las variables de entorno NEXT_PUBLIC_SUPABASE_URL y
+              NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY estén definidas en .env.local
+            </p>
+          </div>
+        ) : (
+          <div className="p-3 bg-green-50 text-green-700 rounded border border-green-100">
+            <p className="text-sm">
+              Lectura desde Supabase exitosa. Filas obtenidas:
+              {Array.isArray(data) ? data.length : 0}
+            </p>
+            <pre className="mt-2 text-xs overflow-x-auto bg-gray-100 p-2 rounded">
+              {JSON.stringify(data, null, 2)}
+            </pre>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold mb-2">2. Formulario con Turnstile</h2>
+        <p className="text-sm mb-4">
+          Completa el widget de Turnstile y envía el formulario. El servidor validará
+          el token con Cloudflare.
+        </p>
+
+        <form action="/api/turnstile" method="POST" className="space-y-4">
+          <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY} data-action="contact"></div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            Enviar a Turnstile
+          </button>
+        </form>
+      </section>
+
+      <section className="mt-8">
+        <h3 className="text-sm font-medium text-gray-500">Criterios de la prueba (sección 12):</h3>
+        <ul className="text-sm space-y-1 list-disc list-inside text-gray-600">
+          <li>✅ Despliegue de la aplicación</li>
+          <li>✅ Lectura de Supabase desde el servidor</li>
+          <li>✅ Formulario con Turnstile</li>
+        </ul>
+      </section>
+    </div>
+  );
+}

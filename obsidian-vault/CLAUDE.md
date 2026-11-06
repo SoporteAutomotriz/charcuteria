@@ -24,22 +24,28 @@ Update this section every time you return to this vault. **Last updated:** 05-11
 - `npm run lint` en verde (ESLint sin errores)
 - `npm run test` en verde (Vitest: 1 test aprobado)
 - `npm run dev` funcionando en http://localhost:3000
-- Sección Comandos de CLAUDE.md completada
+- `npm run build` exitoso (producción)
+- Despliegue en Cloudflare Pages ejecutado: https://bc534542.charcuteria.pages.dev
+- `docs/decisiones/001-hosting.md` creado con decisión de hosting y problema técnico documentado
+- `README.md` creado con instrucciones de ejecución en local
 
 ### Broken / Blocked
 
-- Paso 3 (pruebas de hosting A y B) bloqueado: faltan credenciales/proyecto de Supabase y clave de Cloudflare Turnstile
+- Página en Cloudflare Pages muestra 404 (no carga contenido) — .next no es formato nativo de Pages
+- Requieren configurarse variables de entorno en Cloudflare Pages panel (Production + Preview)
+- `@cloudflare/next-on-pages` falló en Windows (spawn npx ENOENT, EPERM symlinks)
 
 ### Focus right now
 
-- Paso 3: pruebas de hosting (opción A: vinext en Cloudflare Workers; opción B: Vercel)
-- Necesario: cuenta de Cloudflare para Workers y cuenta de Vercel
-- `docs/decisiones/001-hosting.md` — documento de decisión de hosting (pendiente de credenciales)
+- Configurar variables de entorno en Cloudflare Pages panel y probar https://bc534542.charcuteria.pages.dev/hosting-test
+- Si falla, pivotar a Vercel (opción B)
+- Push a GitHub (deferido, pendiente de confirmación del usuario)
 
 ## Key Decisions Made
 
 - **Supabase CLI:** ya instalado (v3.0.0 en `C:\Users\Soporte\node_modules/.bin/supabase`) — no falta nada por instalar
 - **Vitest configurado** con `@vitejs/plugin-react`, jsdom, `@testing-library/jest-dom/vitest` y alias `@/`
+- **Hosting:** Cloudflare Pages (opción A) desplegado pero con 404; pendiente verificar variables de entorno o pivotar a Vercel (opción B)
 
 ## File Map
 

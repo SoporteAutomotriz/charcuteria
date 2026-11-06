@@ -28,3 +28,9 @@ Sitio web de cotización para un servicio de tablas de charcutería y quesos par
 - `npm run test` — pruebas con Vitest
 
 (Se completaron en la Fase 1: desarrollo, pruebas, lint y tipos.)
+
+## Project memory (Obsidian)
+
+Context, current state, decisions and history live in `obsidian-vault/`. Keep them up to date with the obsidian-memory plugin.
+
+@obsidian-vault/CLAUDE.md

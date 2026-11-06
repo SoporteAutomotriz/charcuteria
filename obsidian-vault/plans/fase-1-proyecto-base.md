@@ -15,10 +15,10 @@ Estado: en-progreso
    - Resultado: scripts dev/build/start/lint/typecheck/test añadidos.
 5. [x] Probar opción A de hosting (Cloudflare Pages)
    - Resultado: build exitoso, deploy ejecutado en https://bc534542.charcuteria.pages.dev
-   - Pendiente: verificar que la página cargue contenido en producción
-   - Problema conocido: wrangler.toml ignorado por falta de pages_build_output_dir; .next no es formato nativo de Pages
-6. [ ] Documentar decisión en docs/decisiones/001-hosting.md
-7. [ ] Preparar README con instrucciones para ejecutar en local
+   - Pendiente: verificar que la página cargue contenido en producción (404 en ruta raíz)
+   - Problema conocido: .next no es formato nativo de Pages; requiere @cloudflare/next-on-pages que falló en Windows
+6. [x] Documentar decisión en docs/decisiones/001-hosting.md
+7. [x] Preparar README con instrucciones para ejecutar en local
 
 ## Lo que revisa el dueño
 
