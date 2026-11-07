@@ -14,8 +14,20 @@ export async function GET() {
 
     return NextResponse.json({ data, error: null });
   } catch (e) {
+    const raw = e as Record<string, unknown> | undefined;
+    const errorInfo: Record<string, unknown> = {};
+
+    if (raw?.message) errorInfo.message = raw.message;
+    if (raw?.code) errorInfo.code = raw.code;
+    if (raw?.details) errorInfo.details = raw.details;
+    if (raw?.hint) errorInfo.hint = raw.hint;
+
+    if (Object.keys(errorInfo).length === 0) {
+      errorInfo.message = typeof e === "string" ? e : "Error desconocido";
+    }
+
     return NextResponse.json(
-      { data: null, error: e instanceof Error ? e.message : "Error desconocido" },
+      { data: null, error: errorInfo },
       { status: 500 }
     );
   }
