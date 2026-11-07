@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 export interface TurnstileWidgetProps {
   /** Clave pública de Turnstile. Si no se pasa, se lee de NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY. */
@@ -9,9 +9,9 @@ export interface TurnstileWidgetProps {
   action?: string;
   /** Clase CSS adicional para el contenedor del widget. */
   className?: string;
-  /** Callback ejecutado al validar el token con éxito. Recibe el token como argumento. */
+  /** Callback ejecutado cuando Turnstile devuelve un token válido. Recibe el token como argumento. */
   onVerify?: (token: string) => void | Promise<void>;
-  /** Deshabilita el botón de enviar. */
+  /** Deshabilita el widget y el botón de enviar. */
   disabled?: boolean;
   /** Texto del botón de enviar. */
   verifyButtonLabel?: string;
@@ -20,11 +20,15 @@ export interface TurnstileWidgetProps {
 }
 
 /**
- * Componente reutilizable de Cloudflare Turnstile.
+ * Componente reutilizable de Cloudflare Turnstile con renderizado explícito.
+ *
+ * Usa window.turnstile.render() para evitar condiciones de carrera entre
+ * el script y el renderizado automático por data-sitekey.
  *
  * Encapsula:
  * - Carga del script de Turnstile una sola vez (evita inyección doble aunque se monte dos veces).
- * - Renderizado del widget <div className="cf-turnstile"> con data-sitekey.
+ * - Renderizado explícito del widget con window.turnstile.render().
+ * - Limpieza del widgetId con turnstile.remove() al desmontar.
  * - Estado de carga, verificación y errores.
  *
  * Diseñado para reutilizarse en el configurador del cliente (Fase 5).
@@ -40,6 +44,9 @@ export function TurnstileWidget({
 }: TurnstileWidgetProps) {
   const siteKey = siteKeyProp ?? process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY;
 
+  const widgetRef = useRef<HTMLDivElement | null>(null);
+  const widgetIdRef = useRef<number | null>(null);
+
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<
     "idle" | "verifying" | "success" | "error"
@@ -50,6 +57,21 @@ export function TurnstileWidget({
   // ID fijo del script para detectar si ya está inyectado (evita duplicados)
   const scriptId = "turnstile-api";
 
+  // Limpiar el widget al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (widgetIdRef.current !== null && typeof window.turnstile !== "undefined") {
+        try {
+          window.turnstile.remove(widgetIdRef.current);
+        } catch {
+          // Ignorar errores de limpieza
+        }
+        widgetIdRef.current = null;
+      }
+    };
+  }, []);
+
+  // Cargar el script de Turnstile una sola vez
   useEffect(() => {
     if (!siteKey) {
       setScriptError(
@@ -69,7 +91,36 @@ export function TurnstileWidget({
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
     script.async = true;
     script.defer = true;
-    script.onload = () => setScriptLoaded(true);
+    script.onload = () => {
+      setScriptLoaded(true);
+      // Renderizar explícitamente el widget una vez cargado el script
+      if (widgetRef.current && widgetIdRef.current === null) {
+        widgetIdRef.current = window.turnstile.render(widgetRef.current, {
+          sitekey: siteKey,
+          action,
+          callback: (token: string) => {
+            if (onVerify) {
+              setVerifyStatus("verifying");
+              setMessage("");
+              onVerify(token)
+                .then(() => {
+                  setVerifyStatus("success");
+                  setMessage("Turnstile validado correctamente.");
+                })
+                .catch(() => {
+                  setVerifyStatus("error");
+                  setMessage("Error al validar con el servidor.");
+                });
+            }
+          },
+          "expired-callback": () => {
+            setVerifyStatus("idle");
+            setMessage("");
+            widgetIdRef.current = null;
+          },
+        });
+      }
+    };
     script.onerror = () => {
       setScriptError("No se pudo cargar el script de Cloudflare Turnstile.");
       setScriptLoaded(false);
@@ -79,36 +130,37 @@ export function TurnstileWidget({
     return () => {
       // No remover el script para no romper widgets existentes de otras instancias
     };
-  }, [siteKey]);
+  }, [siteKey, action, onVerify]);
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!onVerify) return;
+      if (!onVerify || !widgetIdRef.current) return;
 
       setVerifyStatus("verifying");
       setMessage("");
 
-      const form = event.currentTarget;
-      const formData = new FormData(form);
-      const token = formData.get("cf-turnstile-response") as string;
-
-      if (!token) {
-        setVerifyStatus("error");
-        setMessage("Completa el widget de Turnstile antes de enviar.");
-        return;
-      }
-
+      // Resetear el widget para permitir una nueva verificación
       try {
-        await onVerify(token);
-        setVerifyStatus("success");
-        setMessage("Turnstile validado correctamente.");
+        window.turnstile.reset(widgetIdRef.current);
       } catch {
-        setVerifyStatus("error");
-        setMessage("Error al validar con el servidor.");
+        // Ignorar errores de reset
       }
+
+      // El token llegará por el callback de Turnstile, no por el formulario tradicional
+      // Esperamos brevemente a que el callback se dispare
+      // Si no llega en 5 segundos, reportamos error
+      const timeout = setTimeout(() => {
+        if (verifyStatus === "verifying") {
+          setVerifyStatus("error");
+          setMessage("Tiempo de espera agotado. Intenta de nuevo.");
+        }
+      }, 5000);
+
+      // Limpiar el timeout cuando cambie el estado
+      return () => clearTimeout(timeout);
     },
-    [onVerify]
+    [onVerify, verifyStatus]
   );
 
   if (!siteKey) {
@@ -132,31 +184,29 @@ export function TurnstileWidget({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className={className ?? "w-full"}>
+      <div ref={widgetRef} className={className ?? "w-full"}>
         {!scriptLoaded && (
           <p className="mt-2 text-sm text-yellow-700">{loadingLabel}</p>
         )}
-        {scriptLoaded && (
-          <div
-            className="cf-turnstile"
-            data-sitekey={siteKey}
-            data-action={action}
-            suppressHydrationWarning
-          ></div>
-        )}
       </div>
 
-      <button
-        type="submit"
-        disabled={disabled || verifyStatus === "verifying" || !scriptLoaded}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-      >
-        {!scriptLoaded
-          ? loadingLabel
-          : verifyStatus === "verifying"
-            ? "Verificando…"
-            : verifyButtonLabel}
-      </button>
+      {!scriptLoaded ? (
+        <button
+          type="button"
+          disabled
+          className="px-4 py-2 bg-blue-600 text-white rounded opacity-50 cursor-not-allowed"
+        >
+          {loadingLabel}
+        </button>
+      ) : (
+        <button
+          type="submit"
+          disabled={disabled || verifyStatus === "verifying"}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+        >
+          {verifyStatus === "verifying" ? "Verificando…" : verifyButtonLabel}
+        </button>
+      )}
 
       {verifyStatus === "success" && (
         <p className="text-sm text-green-700">{message}</p>
