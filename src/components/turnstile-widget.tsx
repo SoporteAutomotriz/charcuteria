@@ -60,9 +60,9 @@ export function TurnstileWidget({
   // Limpiar el widget al desmontar el componente
   useEffect(() => {
     return () => {
-      if (widgetIdRef.current !== null && typeof window.turnstile !== "undefined") {
+      if (widgetIdRef.current !== null && typeof (window as any).turnstile !== "undefined") {
         try {
-          window.turnstile.remove(widgetIdRef.current);
+          (window as any).turnstile.remove(widgetIdRef.current);
         } catch {
           // Ignorar errores de limpieza
         }
@@ -95,14 +95,14 @@ export function TurnstileWidget({
       setScriptLoaded(true);
       // Renderizar explícitamente el widget una vez cargado el script
       if (widgetRef.current && widgetIdRef.current === null) {
-        widgetIdRef.current = window.turnstile.render(widgetRef.current, {
+        widgetIdRef.current = (window as any).turnstile.render(widgetRef.current, {
           sitekey: siteKey,
           action,
           callback: (token: string) => {
             if (onVerify) {
               setVerifyStatus("verifying");
               setMessage("");
-              onVerify(token)
+              Promise.resolve(onVerify(token))
                 .then(() => {
                   setVerifyStatus("success");
                   setMessage("Turnstile validado correctamente.");
@@ -142,7 +142,7 @@ export function TurnstileWidget({
 
       // Resetear el widget para permitir una nueva verificación
       try {
-        window.turnstile.reset(widgetIdRef.current);
+        (window as any).turnstile.reset(widgetIdRef.current);
       } catch {
         // Ignorar errores de reset
       }
