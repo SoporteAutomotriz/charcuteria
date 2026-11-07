@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 export default function HostingTestPage() {
   const [data, setData] = useState<unknown>(null);
@@ -76,15 +77,21 @@ export default function HostingTestPage() {
           el token con Cloudflare.
         </p>
 
-        <form action="/api/turnstile" method="POST" className="space-y-4">
-          <div className="cf-turnstile" data-sitekey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY} data-action="contact"></div>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            Enviar a Turnstile
-          </button>
-        </form>
+        <TurnstileWidget
+          action="contact"
+          onVerify={async (token) => {
+            const response = await fetch("/api/turnstile", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token }),
+            });
+            const data = await response.json();
+            if (!data.success) {
+              throw new Error(data.error || "Validación fallida.");
+            }
+          }}
+          verifyButtonLabel="Enviar a Turnstile"
+        />
       </section>
 
       <section className="mt-8">
