@@ -11,13 +11,15 @@ export default function HostingTestPage() {
 
     fetch("/api/supabase-test")
       .then(async (r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((json) => {
+        const json = await r.json();
         if (!cancelled) {
-          setData(json.data);
-          setError(json.error ?? null);
+          if (!r.ok) {
+            setError(json.error ?? `HTTP ${r.status}`);
+            setData(null);
+          } else {
+            setData(json.data);
+            setError(json.error ?? null);
+          }
         }
       })
       .catch((e) => {
