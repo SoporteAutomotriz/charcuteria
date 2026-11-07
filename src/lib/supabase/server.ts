@@ -5,9 +5,19 @@ import { cache } from "react";
 export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl) {
+    throw new Error("Falta variable de entorno NEXT_PUBLIC_SUPABASE_URL en el servidor");
+  }
+  if (!supabaseKey) {
+    throw new Error("Falta variable de entorno NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY en el servidor");
+  }
+
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         get(name: string) {
