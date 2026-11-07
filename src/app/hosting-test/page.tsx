@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 
 export default function HostingTestPage() {
   const [data, setData] = useState<unknown>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<
+    string | { message?: string; code?: string; details?: string; hint?: string } | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +43,14 @@ export default function HostingTestPage() {
         <h2 className="text-lg font-semibold mb-2">1. Lectura de Supabase desde el servidor</h2>
         {error ? (
           <div className="p-3 bg-red-50 text-red-700 rounded border border-red-100">
-            <p className="text-sm">Error: {error}</p>
+            <p className="text-sm">
+              Error:{" "}
+              {typeof error === "string"
+                ? error
+                : `${error.message ?? "Error desconocido"}${
+                    error.code ? ` (${error.code})` : ""
+                  }`}
+            </p>
             <p className="text-xs mt-1 text-red-600">
               Verifica que las variables de entorno NEXT_PUBLIC_SUPABASE_URL y
               NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY estén definidas en .env.local
