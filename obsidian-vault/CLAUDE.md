@@ -22,24 +22,33 @@ Update this section every time you return to this vault. **Last updated:** 09-11
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores)
-- `npm run test` en verde (Vitest: 1 test aprobado + 35 pruebas RLS estáticas)
+- `npm run test` en verde (Vitest: 59 pruebas pasando — 49 estáticas de RLS + 10 de integración contra Supabase remoto)
+- `npm run lint` en verde (0 errores)
+- `npm run typecheck` en verde (0 errores)
 - `npm run dev` funcionando en http://localhost:3000
 - `npm run build` exitoso (producción)
 - Despliegue en Vercel: https://charcuteria-iota.vercel.app (Fase 1 cerrada)
-- Fase 2: migraciones SQL escritas y comiteadas (3 commits en rama fase-2-base-datos-roles-rls)
+- Fase 2 completa: migraciones 01-06 escritas, comiteadas y pusheadas en rama fase-2-base-datos-roles-rls (2 commits en esta sesión)
+
+### Working
+
+- Migraciones Fase 2 aplicadas al proyecto de Supabase remoto (sujljkevonamhqbyszmz)
+- Pruebas de integración RLS pasando contra el remoto (usuarios admin@test.local y propietario@test.local creados en Auth con roles en usuarios_personal)
+- Migración 05: tablas privadas producto_costos, producto_margenes, paquete_margenes (solo rol propietario)
+- Migración 06: arregló recursión infinita de RLS en usuarios_personal y agregó columna actualizado_en
 
 ### Broken / Blocked
 
-- Commit 4 pendiente: pruebas de RLS (clasificador de seguridad de Claude Code caído, no permite commits vía Bash/PowerShell)
-- Push a GitHub pendiente (pendiente de confirmación del usuario)
-- Migraciones no aplicadas en Supabase panel (pendiente de revisión del dueño)
+- (ninguno — Fase 2 cerrada)
 
 ### Focus right now
 
-- Completar commit 4 (pruebas de RLS) cuando el clasificador se recupere
-- Hacer push a GitHub (pendiente de confirmación del usuario)
-- Aplicar migraciones Fase 2 en Supabase panel
-- Ejecutar pruebas de integración RLS contra Supabase local
+- Fase 3: motor de precios determinista (servidor, aritmética decimal exacta)
+- Configurador del cliente con enlace de cotización (token aleatorio con expiración)
+- Panel del propietario (aprobar/enviar cotizaciones)
+- Archivos sueltos en working tree por revisar antes de empezar Fase 3 (docs/, obsidian-vault/, supabase/migrations/01_esquema_publico.sql)
+
+**Importante:** No tocar el proyecto de producción conectado a Vercel en ningún momento.
 
 ## Key Decisions Made
 
@@ -59,6 +68,7 @@ Update this section every time you return to this vault. **Last updated:** 09-11
 - `supabase/migrations/20261109000002_02_cotizaciones_costos_y_versiones.sql` — cotizaciones, costos, versiones (Fase 2)
 - `supabase/migrations/20261109000003_03_trigger_congelar_version.sql` — trigger congelado al llegar a "enviada" (Fase 2)
 - `supabase/migrations/20261109000004_04_eliminar_politica_anon_testing.sql` — eliminar política anon (Fase 2)
+- `docs/MIGRACIONES_FASE_2_SQL.md` — códigos SQL listos para pegar en el SQL Editor de Supabase (Fase 2)
 - `src/app/page.test.tsx` — prueba mínima de Vitest
 - `src/test/rls-policies.test.ts` — 35 pruebas estáticas de RLS
 - `src/test/rls-integration.test.ts` — pruebas de integración RLS con usuario real

@@ -27,8 +27,9 @@ _Generated automatically on 09-11-2026 10:21. Updated manually for Fase 2 sessio
 
 - [[decisions/001-hosting|001-hosting]]
 - [[decisions/002-fase-2-bd-roles-rls|002-fase-2-bd-roles-rls]]
+- [[decisions/003-supabase-cloud-desarrollo|003-supabase-cloud-desarrollo]]
 
 ## daily
 
-- **09-11-2026** — [[daily/09-11-2026/session-10h30-fase-2-bd-roles-rls|session-10h30-fase-2-bd-roles-rls]]
+- **09-11-2026** — [[daily/09-11-2026/session-10h30-fase-2-bd-roles-rls|session-10h30-fase-2-bd-roles-rls]] · [[daily/09-11-2026/session-15h30-supabase-cloud-desarrollo|session-15h30-supabase-cloud-desarrollo]]
 
