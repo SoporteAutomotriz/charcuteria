@@ -3,7 +3,8 @@
 Sitio web de cotización para un servicio de tablas de charcutería y quesos para eventos. El cliente arma su tabla o mesa, ve un estimado preliminar y envía una solicitud. El propietario revisa, ajusta y aprueba; el cliente recibe la cotización por correo y WhatsApp.
 
 **Idioma:** español  
-**Fuente de verdad:** `docs/ESPECIFICACION_FUNCIONAL.md` (v1)
+**Fuente de verdad:** `docs/ESPECIFICACION_FUNCIONAL.md` (v1)  
+**Hosting:** Vercel (`https://charcuteria-iota.vercel.app`)
 
 ---
 
@@ -17,6 +18,7 @@ Sitio web de cotización para un servicio de tablas de charcutería y quesos par
 | Antispam | Cloudflare Turnstile |
 | Pruebas | Vitest 5 + jsdom + Testing Library |
 | Lint | ESLint 9 con `eslint-config-next` |
+| Despliegue | Vercel |
 
 ---
 
@@ -29,7 +31,7 @@ Sitio web de cotización para un servicio de tablas de charcutería y quesos par
 | `npm run start` | Servidor de producción (local) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript `tsc --noEmit` |
-| `npm run test` | Vitest (pruebas unitarias) |
+| `npm run test` | Vitest (pruebas unitarias y estáticas de RLS) |
 
 ---
 
@@ -45,6 +47,38 @@ CLOUDFLARE_TURNSTILE_SECRET_KEY=0x4AAAAAAF...
 ```
 
 > ⚠️ Nunca subas `.env.local` ni ningún archivo con secretos a git. Está en `.gitignore`.
+> ⚠️ Las variables con prefijo `NEXT_PUBLIC_` se exponen al navegador. `CLOUDFLARE_TURNSTILE_SECRET_KEY` es solo de servidor.
+> ⚠️ Si cambian las variables en Vercel, es necesario hacer redeploy para que surtan efecto.
+
+---
+
+## Pruebas de integración de RLS (Supabase remoto)
+
+Las pruebas en `src/test/rls-integration.test.ts` validan Row Level Security con usuarios reales contra el proyecto de Supabase en la nube. **No crean usuarios**: requieren que existan previamente.
+
+Antes de correrlas por primera vez:
+
+```powershell
+# 1. Crear usuarios de prueba en Supabase remoto (una sola vez)
+$env:SUPABASE_URL = "https://tu-proyecto.supabase.co"
+$env:SUPABASE_ANON_KEY = "sb_publishable_..."
+# Opcional: para confirmar emails y asignar roles automáticamente
+$env:SUPABASE_SERVICE_ROLE_KEY = "sb_service_role_..."
+npx tsx scripts/crear-usuarios-prueba.ts
+
+# 2. Correr las pruebas de integración
+$env:VITEST_SUPABASE_URL = "https://tu-proyecto.supabase.co"
+$env:VITEST_SUPABASE_ANON_KEY = "sb_publishable_..."
+npm run test
+```
+
+El script crea dos usuarios:
+- `admin@test.local` → rol `administrador`
+- `propietario@test.local` → rol `propietario`
+
+Sin `SUPABASE_SERVICE_ROLE_KEY`, debes confirmar los emails e insertar los roles manualmente en el SQL Editor de Supabase (el script imprime las sentencias SQL necesarias).
+
+> ⚠️ Las pruebas fallan con un mensaje claro si los usuarios no existen: "¿Corriste antes 'npx tsx scripts/crear-usuarios-prueba.ts'?"
 
 ---
 
@@ -64,16 +98,35 @@ npm run dev
 
 ---
 
+## Aplicar migraciones de Supabase
+
+La migración de la tabla de prueba `testing` está en:
+
+```
+supabase/migrations/20261107000001_create_testing_table.sql
+```
+
+Aplícala en el SQL Editor de tu panel de Supabase en la nube. Esta migración:
+
+1. Crea la tabla `public.testing` con columnas `id`, `nombre` y `creado_en`.
+2. Activa RLS (Row Level Security).
+3. Crea una política que permite `SELECT` al rol `anon` (necesario para lectura desde el navegador).
+4. Inserta una fila de ejemplo para verificar que la lectura funciona.
+
+---
+
 ## Estado de Fase 1
 
 - ✅ Proyecto base Next.js + TypeScript + Tailwind
 - ✅ Lint, typecheck y pruebas configurados y en verde
 - ✅ Página de prueba de hosting (`/hosting-test`) con Supabase + Turnstile
 - ✅ Build de producción exitoso
-- 🔄 Despliegue en Cloudflare Pages ejecutado pero sin contenido visible (404)
-- ⏳ Decisión de hosting documentada en `docs/decisiones/001-hosting.md`
-- ⏳ README (este archivo)
-- ⏳ Push a GitHub (deferido, pendiente de confirmación)
+- ✅ Despliegue en Vercel en `https://charcuteria-iota.vercel.app`
+- ✅ Decisión de hosting documentada en `docs/decisiones/001-hosting.md`
+- ✅ Componente reutilizable de Turnstile en `src/components/turnstile-widget.tsx`
+- ✅ Migración de tabla `testing` en `supabase/migrations/`
+- ⏳ Push a GitHub (deferido, pendiente de confirmación del usuario)
+- ⏳ Fase 2: base de datos, roles y RLS
 
 ---
 

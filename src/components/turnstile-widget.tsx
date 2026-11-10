@@ -19,6 +19,29 @@ export interface TurnstileWidgetProps {
   loadingLabel?: string;
 }
 
+/** Tipado mínimo de la API global de Cloudflare Turnstile para evitar casts a `any`. */
+interface TurnstileRenderOptions {
+  sitekey: string;
+  action?: string;
+  callback?: (token: string) => void;
+  "expired-callback"?: () => void;
+}
+
+interface TurnstileApi {
+  render: (
+    element: HTMLElement,
+    options: TurnstileRenderOptions,
+  ) => number;
+  remove: (widgetId: number) => void;
+  reset: (widgetId: number) => void;
+}
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
+
 /**
  * Componente reutilizable de Cloudflare Turnstile con renderizado explícito.
  *
@@ -47,22 +70,31 @@ export function TurnstileWidget({
   const widgetRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<number | null>(null);
 
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  // ID fijo del script para detectar si ya está inyectado (evita duplicados)
+  const scriptId = "turnstile-api";
+
+  // Inicializar estado perezosamente para evitar setState síncrono
+  // dentro del cuerpo de un useEffect (causa cascadas de render).
+  const [scriptLoaded, setScriptLoaded] = useState(() => {
+    return document.getElementById(scriptId) !== null;
+  });
+  const [scriptError, setScriptError] = useState<string | null>(() => {
+    if (!siteKey) {
+      return "Falta NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY en las variables de entorno";
+    }
+    return null;
+  });
   const [verifyStatus, setVerifyStatus] = useState<
     "idle" | "verifying" | "success" | "error"
   >("idle");
   const [message, setMessage] = useState("");
-  const [scriptError, setScriptError] = useState<string | null>(null);
-
-  // ID fijo del script para detectar si ya está inyectado (evita duplicados)
-  const scriptId = "turnstile-api";
 
   // Limpiar el widget al desmontar el componente
   useEffect(() => {
     return () => {
-      if (widgetIdRef.current !== null && typeof (window as any).turnstile !== "undefined") {
+      if (widgetIdRef.current !== null && window.turnstile) {
         try {
-          (window as any).turnstile.remove(widgetIdRef.current);
+          window.turnstile.remove(widgetIdRef.current);
         } catch {
           // Ignorar errores de limpieza
         }
@@ -74,15 +106,13 @@ export function TurnstileWidget({
   // Cargar el script de Turnstile una sola vez
   useEffect(() => {
     if (!siteKey) {
-      setScriptError(
-        "Falta NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY en las variables de entorno",
-      );
+      // scriptError ya se inicializó perezosamente arriba; no hacer nada aquí
       return;
     }
 
-    // Si el script ya está inyectado (por esta u otra instancia), no inyectar de nuevo
+    // Si el script ya está inyectado (por esta u otra instancia), scriptLoaded
+    // ya se inicializó perezosamente como true; no inyectar de nuevo.
     if (document.getElementById(scriptId)) {
-      setScriptLoaded(true);
       return;
     }
 
@@ -94,8 +124,8 @@ export function TurnstileWidget({
     script.onload = () => {
       setScriptLoaded(true);
       // Renderizar explícitamente el widget una vez cargado el script
-      if (widgetRef.current && widgetIdRef.current === null) {
-        widgetIdRef.current = (window as any).turnstile.render(widgetRef.current, {
+      if (widgetRef.current && widgetIdRef.current === null && window.turnstile) {
+        widgetIdRef.current = window.turnstile.render(widgetRef.current, {
           sitekey: siteKey,
           action,
           callback: (token: string) => {
@@ -142,7 +172,7 @@ export function TurnstileWidget({
 
       // Resetear el widget para permitir una nueva verificación
       try {
-        (window as any).turnstile.reset(widgetIdRef.current);
+        window.turnstile?.reset(widgetIdRef.current);
       } catch {
         // Ignorar errores de reset
       }
@@ -160,24 +190,22 @@ export function TurnstileWidget({
       // Limpiar el timeout cuando cambie el estado
       return () => clearTimeout(timeout);
     },
-    [onVerify, verifyStatus]
+    [onVerify, verifyStatus],
   );
 
-  if (!siteKey) {
+  // Render condicional al final (todos los hooks ya se ejecutaron arriba)
+  if (!siteKey || scriptError) {
     return (
       <div className="p-4 bg-red-50 text-red-700 rounded border border-red-100">
         <p className="text-sm">
-          Falta configuración: define la variable de entorno{" "}
-          <code className="font-mono">NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY</code>.
+          {!siteKey
+            ? "Falta configuración: define la variable de entorno"
+            : scriptError}
+          {" "}
+          {!siteKey ? (
+            <code className="font-mono">NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY</code>
+          ) : null}
         </p>
-      </div>
-    );
-  }
-
-  if (scriptError) {
-    return (
-      <div className="p-4 bg-red-50 text-red-700 rounded border border-red-100">
-        <p className="text-sm">{scriptError}</p>
       </div>
     );
   }

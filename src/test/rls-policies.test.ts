@@ -145,6 +145,50 @@ describe("RLS — cotizaciones, cotizaciones_costos, cotizacion_versiones (migra
   });
 });
 
+describe("RLS — tablas privadas de costos y márgenes (migración 5)", () => {
+  const sqlPrivadas = readMigration(
+    "20261109000005_05_costos_margenes_privados.sql"
+  );
+
+  const tablasPrivadas = [
+    "producto_costos",
+    "producto_margenes",
+    "paquete_margenes",
+  ];
+
+  for (const tabla of tablasPrivadas) {
+    it(`${tabla}: tiene RLS habilitado`, () => {
+      expect(hasRLS(sqlPrivadas, tabla)).toBe(true);
+    });
+
+    it(`${tabla}: NO tiene políticas para el rol anon`, () => {
+      expect(countAnonPolicies(sqlPrivadas, tabla)).toBe(0);
+    });
+
+    it(`${tabla}: política solo para propietario`, () => {
+      const re = new RegExp(
+        `create policy[\\s\\S]*?on public\\.${tabla}[\\s\\S]*?to authenticated[\\s\\S]*?rol = 'propietario'`,
+        "i"
+      );
+      expect(re.test(sqlPrivadas)).toBe(true);
+    });
+  }
+
+  it("producto_costos tiene columna costo_unitario_compra", () => {
+    expect(/costo_unitario_compra/i.test(sqlPrivadas)).toBe(true);
+  });
+
+  it("producto_margenes tiene columnas margen_propio_pct y precio_fijo_manual", () => {
+    expect(/margen_propio_pct/i.test(sqlPrivadas)).toBe(true);
+    expect(/precio_fijo_manual/i.test(sqlPrivadas)).toBe(true);
+  });
+
+  it("paquete_margenes tiene columnas margen_propio_pct y precio_fijo_manual", () => {
+    expect(/margen_propio_pct/i.test(sqlPrivadas)).toBe(true);
+    expect(/precio_fijo_manual/i.test(sqlPrivadas)).toBe(true);
+  });
+});
+
 describe("Seguridad — costos y márgenes inaccesibles (sección 11 de la especificación)", () => {
   const sqlCostos = readMigration(
     "20261109000002_02_cotizaciones_costos_y_versiones.sql"
@@ -178,6 +222,24 @@ describe("Seguridad — costos y márgenes inaccesibles (sección 11 de la espec
     for (const columna of columnasCosto) {
       expect(
         new RegExp(`\\b${columna}\\b`, "i").test(sqlCostos)
+      ).toBe(false);
+    }
+  });
+
+  it("productos y paquetes (tablas públicas) no expone columnas de costo ni margen", () => {
+    const sqlPublico = readMigration(
+      "20261109000001_01_esquema_publico.sql"
+    );
+    const columnasCosto = [
+      "costo_unitario_compra",
+      "costo_total",
+      "margen_propio_pct",
+      "precio_fijo_manual",
+      "precio_costo",
+    ];
+    for (const columna of columnasCosto) {
+      expect(
+        new RegExp(`\\b${columna}\\b`, "i").test(sqlPublico)
       ).toBe(false);
     }
   });
