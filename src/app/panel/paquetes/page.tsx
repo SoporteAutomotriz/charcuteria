@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import {
   listarPaquetes,
   crearPaquete,
+  actualizarPaquete,
   obtenerPaquete,
   eliminarPaquete,
   crearComponente,
