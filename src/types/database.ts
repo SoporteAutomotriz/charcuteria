@@ -327,6 +327,8 @@ export type Database = {
           cliente_telefono: string | null;
           cliente_correo: string | null;
           total_venta: string | null;
+          token: string;
+          token_expires_en: string;
           creado_en: string;
           actualizado_en: string;
         };
@@ -338,6 +340,8 @@ export type Database = {
           cliente_telefono?: string | null;
           cliente_correo?: string | null;
           total_venta?: string | null;
+          token?: string;
+          token_expires_en?: string;
           creado_en?: string;
           actualizado_en?: string;
         };
@@ -349,6 +353,8 @@ export type Database = {
           cliente_telefono?: string | null;
           cliente_correo?: string | null;
           total_venta?: string | null;
+          token?: string;
+          token_expires_en?: string;
           creado_en?: string;
           actualizado_en?: string;
         };

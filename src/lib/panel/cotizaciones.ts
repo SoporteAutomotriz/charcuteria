@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cotizar } from "@/lib/precios/motor";
 import { requirePanelAccess } from "@/lib/auth/server";
+import { generarTokenCotizacion, fechaExpiracionToken } from "@/lib/panel/cotizaciones-token";
 import type { Database } from "@/types/database";
 
 export type CotizacionInsert = Database["public"]["Tables"]["cotizaciones"]["Insert"];
@@ -238,12 +239,17 @@ export async function crearCotizacion(formData: FormData) {
   const salida = cotizar(entrada);
 
   // 8. Insertar cotización con total_venta recalcado (nunca del navegador)
+  const token = generarTokenCotizacion();
+  const token_expires_en = fechaExpiracionToken();
+
   const cotizacion: CotizacionInsert = {
     folio: `COT-${Date.now()}`,
     estado: "borrador",
     cliente_nombre: clienteNombre || null,
     cliente_telefono: clienteTelefono || null,
     cliente_correo: clienteCorreo || null,
+    token,
+    token_expires_en,
     total_venta: salida.totalConIva,
     creado_en: new Date().toISOString(),
     actualizado_en: new Date().toISOString(),
