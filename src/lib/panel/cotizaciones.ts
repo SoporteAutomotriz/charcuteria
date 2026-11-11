@@ -244,7 +244,7 @@ export async function crearCotizacion(formData: FormData) {
     cliente_nombre: clienteNombre || null,
     cliente_telefono: clienteTelefono || null,
     cliente_correo: clienteCorreo || null,
-    total_venta: Number(salida.totalConIva),
+    total_venta: salida.totalConIva,
     creado_en: new Date().toISOString(),
     actualizado_en: new Date().toISOString(),
   };
@@ -262,7 +262,7 @@ export async function crearCotizacion(formData: FormData) {
   // 9. Guardar desglose de costos en tabla privada (solo propietario)
   const costoCotizacion: CotizacionCostoInsert = {
     cotizacion_id: cotizacionData.id,
-    total_costo: Number(salida.subtotalCosto),
+    total_costo: salida.subtotalCosto,
     datos_costo: {
       lineas: JSON.parse(JSON.stringify(salida.lineas)),
       subtotalCosto: salida.subtotalCosto,

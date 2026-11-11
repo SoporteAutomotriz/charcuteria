@@ -326,7 +326,7 @@ export type Database = {
           cliente_nombre: string | null;
           cliente_telefono: string | null;
           cliente_correo: string | null;
-          total_venta: number | null;
+          total_venta: string | null;
           creado_en: string;
           actualizado_en: string;
         };
@@ -337,7 +337,7 @@ export type Database = {
           cliente_nombre?: string | null;
           cliente_telefono?: string | null;
           cliente_correo?: string | null;
-          total_venta?: number | null;
+          total_venta?: string | null;
           creado_en?: string;
           actualizado_en?: string;
         };
@@ -348,7 +348,7 @@ export type Database = {
           cliente_nombre?: string | null;
           cliente_telefono?: string | null;
           cliente_correo?: string | null;
-          total_venta?: number | null;
+          total_venta?: string | null;
           creado_en?: string;
           actualizado_en?: string;
         };
@@ -357,21 +357,21 @@ export type Database = {
         Row: {
           id: number;
           cotizacion_id: number;
-          total_costo: number;
+          total_costo: string;
           datos_costo: Json;
           creado_en: string;
         };
         Insert: {
           id?: number;
           cotizacion_id: number;
-          total_costo: number;
+          total_costo: string;
           datos_costo: Json;
           creado_en?: string;
         };
         Update: {
           id?: number;
           cotizacion_id?: number;
-          total_costo?: number;
+          total_costo?: string;
           datos_costo?: Json;
           creado_en?: string;
         };
@@ -380,21 +380,21 @@ export type Database = {
         Row: {
           id: number;
           producto_id: number;
-          costo_unitario_compra: number;
+          costo_unitario_compra: string;
           creado_en: string;
           actualizado_en: string;
         };
         Insert: {
           id?: number;
           producto_id: number;
-          costo_unitario_compra: number;
+          costo_unitario_compra: string;
           creado_en?: string;
           actualizado_en?: string;
         };
         Update: {
           id?: number;
           producto_id?: number;
-          costo_unitario_compra?: number;
+          costo_unitario_compra?: string;
           creado_en?: string;
           actualizado_en?: string;
         };
@@ -403,16 +403,16 @@ export type Database = {
         Row: {
           id: number;
           producto_id: number;
-          margen_propio_pct: number;
-          precio_fijo_manual: number | null;
+          margen_propio_pct: string;
+          precio_fijo_manual: string | null;
           creado_en: string;
           actualizado_en: string;
         };
         Insert: {
           id?: number;
           producto_id: number;
-          margen_propio_pct: number;
-          precio_fijo_manual?: number | null;
+          margen_propio_pct: string;
+          precio_fijo_manual?: string | null;
           creado_en?: string;
           actualizado_en?: string;
         };
@@ -420,7 +420,7 @@ export type Database = {
           id?: number;
           producto_id?: number;
           margen_propio_pct?: number;
-          precio_fijo_manual?: number | null;
+          precio_fijo_manual?: string | null;
           creado_en?: string;
           actualizado_en?: string;
         };
@@ -429,16 +429,16 @@ export type Database = {
         Row: {
           id: number;
           paquete_id: number;
-          margen_propio_pct: number;
-          precio_fijo_manual: number | null;
+          margen_propio_pct: string;
+          precio_fijo_manual: string | null;
           creado_en: string;
           actualizado_en: string;
         };
         Insert: {
           id?: number;
           paquete_id: number;
-          margen_propio_pct: number;
-          precio_fijo_manual?: number | null;
+          margen_propio_pct: string;
+          precio_fijo_manual?: string | null;
           creado_en?: string;
           actualizado_en?: string;
         };
@@ -446,7 +446,7 @@ export type Database = {
           id?: number;
           paquete_id?: number;
           margen_propio_pct?: number;
-          precio_fijo_manual?: number | null;
+          precio_fijo_manual?: string | null;
           creado_en?: string;
           actualizado_en?: string;
         };
