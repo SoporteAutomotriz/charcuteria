@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getPanelSession } from "@/lib/auth/server";
 import { signout } from "@/app/panel/auth/signout/action";
 
+export const dynamic = "force-dynamic";
+
 /**
  * Layout protegido del panel del propietario.
  * Solo usuarios con rol propietario o administrador pueden acceder.
