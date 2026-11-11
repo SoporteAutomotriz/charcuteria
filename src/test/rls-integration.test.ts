@@ -73,13 +73,13 @@ function crearCliente(token?: string): SupabaseClient {
 }
 
 const USUARIO_ADMIN = {
-  email: "admin@test.local",
-  password: "TestPassword12345!",
+  email: process.env.VITEST_ADMIN_EMAIL ?? "admin@test.local",
+  password: process.env.VITEST_ADMIN_PASSWORD ?? "",
 };
 
 const USUARIO_PROPIETARIO = {
-  email: "propietario@test.local",
-  password: "TestPassword12345!",
+  email: process.env.VITEST_PROPIETARIO_EMAIL ?? "propietario@test.local",
+  password: process.env.VITEST_PROPIETARIO_PASSWORD ?? "",
 };
 
 let supabaseAnon: SupabaseClient;
