@@ -73,17 +73,10 @@ export function TurnstileWidget({
   // ID fijo del script para detectar si ya está inyectado (evita duplicados)
   const scriptId = "turnstile-api";
 
-  // Inicializar estado perezosamente para evitar setState síncrono
-  // dentro del cuerpo de un useEffect (causa cascadas de render).
-  const [scriptLoaded, setScriptLoaded] = useState(() => {
-    return document.getElementById(scriptId) !== null;
-  });
-  const [scriptError, setScriptError] = useState<string | null>(() => {
-    if (!siteKey) {
-      return "Falta NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY en las variables de entorno";
-    }
-    return null;
-  });
+  // Valores iniciales seguros para el servidor: nunca tocar document ni
+  // window en el inicializador de useState (Next.js renderiza en el servidor).
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [scriptError, setScriptError] = useState<string | null>(null);
   const [verifyStatus, setVerifyStatus] = useState<
     "idle" | "verifying" | "success" | "error"
   >("idle");
@@ -103,16 +96,49 @@ export function TurnstileWidget({
     };
   }, []);
 
-  // Cargar el script de Turnstile una sola vez
+  // Cargar el script de Turnstile una sola vez (solo en el navegador)
   useEffect(() => {
     if (!siteKey) {
-      // scriptError ya se inicializó perezosamente arriba; no hacer nada aquí
       return;
     }
 
-    // Si el script ya está inyectado (por esta u otra instancia), scriptLoaded
-    // ya se inicializó perezosamente como true; no inyectar de nuevo.
-    if (document.getElementById(scriptId)) {
+    // Si el script ya está inyectado (por esta u otra instancia), marcarlo
+    // como cargado y renderizar el widget directamente. El setState se aplaza
+    // con setTimeout para no ejecutarse de forma síncrona dentro del efecto
+    // (evita cascadas de render y la regla de lint set-state-in-effect).
+    const existente = document.getElementById(scriptId);
+    if (existente) {
+      setTimeout(() => setScriptLoaded(true), 0);
+      if (
+        widgetRef.current &&
+        widgetIdRef.current === null &&
+        window.turnstile
+      ) {
+        widgetIdRef.current = window.turnstile.render(widgetRef.current, {
+          sitekey: siteKey,
+          action,
+          callback: (token: string) => {
+            if (onVerify) {
+              setVerifyStatus("verifying");
+              setMessage("");
+              Promise.resolve(onVerify(token))
+                .then(() => {
+                  setVerifyStatus("success");
+                  setMessage("Turnstile validado correctamente.");
+                })
+                .catch(() => {
+                  setVerifyStatus("error");
+                  setMessage("Error al validar con el servidor.");
+                });
+            }
+          },
+          "expired-callback": () => {
+            setVerifyStatus("idle");
+            setMessage("");
+            widgetIdRef.current = null;
+          },
+        });
+      }
       return;
     }
 
