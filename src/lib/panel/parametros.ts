@@ -8,6 +8,23 @@ export type ParametroGlobalInsert =
 export type ParametroGlobalUpdate =
   Database["public"]["Tables"]["parametros_globales"]["Update"];
 
+/** Claves cuyos valores deben ser siempre numéricos (usados por el motor de precios). */
+export const PARAMETROS_NUMERICOS = new Set([
+  "margen_global_pct",
+  "iva_pct",
+]);
+
+/** Valida que el valor sea numérico para claves conocidas del motor de precios. */
+function validarValorNumerico(clave: string, valor: unknown): void {
+  if (!PARAMETROS_NUMERICOS.has(clave)) return;
+
+  if (typeof valor !== "number" || !Number.isFinite(valor)) {
+    throw new Error(
+      `El parámetro '${clave}' debe contener un valor numérico válido`,
+    );
+  }
+}
+
 export async function listarParametrosGlobales(): Promise<ParametroGlobal[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -45,6 +62,8 @@ export async function obtenerParametroGlobal(
 export async function crearParametroGlobal(
   parametro: ParametroGlobalInsert,
 ): Promise<ParametroGlobal> {
+  validarValorNumerico(parametro.clave, parametro.valor);
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parametros_globales")
@@ -63,6 +82,10 @@ export async function actualizarParametroGlobal(
   clave: string,
   cambios: ParametroGlobalUpdate,
 ): Promise<ParametroGlobal> {
+  if (cambios.valor !== undefined) {
+    validarValorNumerico(clave, cambios.valor);
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("parametros_globales")
