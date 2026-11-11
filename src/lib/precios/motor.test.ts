@@ -6,6 +6,10 @@ import {
   casoConMargenCategoria,
   casoConMargenGlobal,
   casoMultiItem,
+  casoConTransporte,
+  casoConMontaje,
+  casoConPersonal,
+  casoZonaEspecial,
   ESPERADOS,
 } from "./casos-prueba";
 
@@ -47,6 +51,38 @@ describe("Motor de precios determinista (Fase 3)", () => {
       const salida = cotizar(casoMultiItem());
       const cliente = paraCliente(salida);
       expect(cliente).toEqual(ESPERADOS["caso multi item"]);
+    });
+  });
+
+  describe("caso con transporte", () => {
+    it("suma tarifa fija y cargo de distancia, aplica IVA sobre el total", () => {
+      const salida = cotizar(casoConTransporte());
+      const cliente = paraCliente(salida);
+      expect(cliente).toEqual(ESPERADOS["caso con transporte"]);
+    });
+  });
+
+  describe("caso con montaje", () => {
+    it("aplica horas mínimas si las horas solicitadas son menores", () => {
+      const salida = cotizar(casoConMontaje());
+      const cliente = paraCliente(salida);
+      expect(cliente).toEqual(ESPERADOS["caso con montaje"]);
+    });
+  });
+
+  describe("caso con personal", () => {
+    it("calcula personas por invitados con redondeo hacia arriba", () => {
+      const salida = cotizar(casoConPersonal());
+      const cliente = paraCliente(salida);
+      expect(cliente).toEqual(ESPERADOS["caso con personal"]);
+    });
+  });
+
+  describe("caso zona especial", () => {
+    it("zona especial no cobra transporte (requiere evaluación)", () => {
+      const salida = cotizar(casoZonaEspecial());
+      const cliente = paraCliente(salida);
+      expect(cliente).toEqual(ESPERADOS["caso zona especial"]);
     });
   });
 

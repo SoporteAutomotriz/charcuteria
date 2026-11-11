@@ -16,11 +16,15 @@ import Big from "big.js";
 //    categoría > margen global.
 //  - El IVA se aplica después del precio de venta.
 //  - Cada línea se redondea a 2 decimales; el total es la suma de las líneas.
+//  - Transporte, montaje y personal son cargos de servicio que se suman al
+//    precio de venta sin margen adicional (el dueño configura tarifas desde
+//    el panel en Fase 4; aquí solo se aplican las fórmulas).
 // ============================================================================
 
 // Precisión interna para divisiones. big.js ya usa por defecto DP = 20 y
 // RM = RoundHalfUp, que son adecuados para dinero. El modo de redondeo
 // comercial definitivo es PENDIENTE-DUEÑO (sección 7).
+Big.DP = 20;
 
 // ---------------------------------------------------------------------------
 // Tipos
@@ -55,6 +59,40 @@ export interface CategoriaParametros {
   margenPct: string;
 }
 
+export interface ZonaTransporte {
+  id: string;
+  municipios: string[];
+  /** Tarifa fija de la zona. */
+  tarifaFija: string;
+  cargoDistancia?: string;
+  cargoHorario?: string;
+  cargoAccesoDificil?: string;
+  /** Zona especial: no tiene cálculo automático (requiere evaluación). */
+  esZonaEspecial: boolean;
+}
+
+export interface MontajeConfig {
+  /** Tarifa por hora de montaje. */
+  tarifaPorHora: string;
+  /** Horas mínimas facturables. */
+  horasMinimas: string;
+  /** Horas solicitadas. */
+  horas: string;
+}
+
+export interface PersonalConfig {
+  /** Tarifa por hora de personal. */
+  tarifaPorHora: string;
+  /** Horas mínimas facturables. */
+  horasMinimas: string;
+  /** Horas solicitadas. */
+  horas: string;
+  /** Número de invitados del evento. */
+  invitados: string;
+  /** Invitados por persona de personal (N, PENDIENTE-DUEÑO). */
+  invitadosPorPersona: string;
+}
+
 export interface MotorEntrada {
   items: ProductoEntrada[];
   /** Datos privados de costo por producto (vienen del servidor, nunca del navegador). */
@@ -65,6 +103,12 @@ export interface MotorEntrada {
   margenGlobalPct: string;
   /** Tasa de IVA (0 a 100), se aplica después del precio de venta. */
   ivaPct: string;
+  /** Configuración opcional de transporte por zona. */
+  transporte?: ZonaTransporte;
+  /** Configuración opcional de montaje. */
+  montaje?: MontajeConfig;
+  /** Configuración opcional de personal. */
+  personal?: PersonalConfig;
 }
 
 // ---------------------------------------------------------------------------
@@ -89,15 +133,26 @@ export interface LineaInterna {
 
 export interface MotorSalidaInterna {
   lineas: LineaInterna[];
-  /** Subtotal de costo (privado). */
+  /** Subtotal de costo de ingredientes (privado). */
   subtotalCosto: Money;
+  /** Costo de transporte (privado, si aplica). */
+  costoTransporte: Money;
+  /** Costo de montaje (privado, si aplica). */
+  costoMontaje: Money;
+  /** Costo de personal (privado, si aplica). */
+  costoPersonal: Money;
+  /** Subtotal de venta de ingredientes (precios de venta, sin margen de servicios). */
+  subtotalVentaIngredientes: Money;
+  /** Subtotal de servicios (transporte + montaje + personal). */
+  subtotalServicios: Money;
+  /** Subtotal de venta completo (ingredientes + servicios). */
   subtotalVenta: Money;
   ivaTotal: Money;
   totalConIva: Money;
 }
 
 // ---------------------------------------------------------------------------
-// Salida apta para el cliente (sin costos ni márgenes)
+// Salida apta para el cliente (sin costos ni márgenes internos)
 // ---------------------------------------------------------------------------
 
 export interface LineaCliente {
@@ -110,6 +165,10 @@ export interface LineaCliente {
 
 export interface MotorSalidaCliente {
   lineas: LineaCliente[];
+  /** Cargos de servicio visibles al cliente (transporte, montaje, personal). */
+  costoTransporte: Money;
+  costoMontaje: Money;
+  costoPersonal: Money;
   subtotalVenta: Money;
   ivaTotal: Money;
   totalConIva: Money;
@@ -143,8 +202,52 @@ function requireRangoMargen(pct: Big, campo: string): void {
   }
 }
 
+/** División entera con redondeo hacia arriba (ceil), sin usar flotantes. */
+function ceilDiv(a: Big, b: Big): Big {
+  const cociente = a.div(b);
+  const residuo = a.mod(b);
+  if (residuo.eq(0)) return cociente;
+  return cociente.plus(1);
+}
+
 // ---------------------------------------------------------------------------
-// Cálculo de una línea
+// Cálculo de cargos de servicio
+// ---------------------------------------------------------------------------
+
+function calcularTransporte(zona: ZonaTransporte): Big {
+  if (zona.esZonaEspecial) {
+    // Zona especial: no hay cálculo automático (requiere evaluación).
+    return new Big(0);
+  }
+  let total = toBig(zona.tarifaFija);
+  if (zona.cargoDistancia) total = total.plus(toBig(zona.cargoDistancia));
+  if (zona.cargoHorario) total = total.plus(toBig(zona.cargoHorario));
+  if (zona.cargoAccesoDificil) total = total.plus(toBig(zona.cargoAccesoDificil));
+  return total;
+}
+
+function calcularMontaje(config: MontajeConfig): Big {
+  const tarifa = toBig(config.tarifaPorHora);
+  const horas = toBig(config.horas);
+  const horasMinimas = toBig(config.horasMinimas);
+  const horasEfectivas = horas.gt(horasMinimas) ? horas : horasMinimas;
+  return tarifa.times(horasEfectivas);
+}
+
+function calcularPersonal(config: PersonalConfig): Big {
+  const tarifa = toBig(config.tarifaPorHora);
+  const horas = toBig(config.horas);
+  const horasMinimas = toBig(config.horasMinimas);
+  const horasEfectivas = horas.gt(horasMinimas) ? horas : horasMinimas;
+  const invitados = toBig(config.invitados);
+  const invitadosPorPersona = toBig(config.invitadosPorPersona);
+  requirePositive(invitadosPorPersona, "invitadosPorPersona");
+  const personas = ceilDiv(invitados, invitadosPorPersona);
+  return personas.times(tarifa).times(horasEfectivas);
+}
+
+// ---------------------------------------------------------------------------
+// Cálculo de una línea de ingrediente
 // ---------------------------------------------------------------------------
 
 function calcularLinea(
@@ -195,7 +298,7 @@ function calcularLinea(
       costo.margenPropioPct ?? categoria?.margenPct ?? margenGlobal.toString();
     const margenFactor = pctAFactor(margenPct);
     requireRangoMargen(
-      margenFactor.times(100),
+      toBig(margenPct),
       `margen de ${item.productoId}`,
     );
     precioVentaRaw = costoLinea.div(Big(1).minus(margenFactor));
@@ -245,19 +348,35 @@ export function cotizar(entrada: MotorEntrada): MotorSalidaInterna {
     (acc, l) => acc.plus(toBig(l.costoLinea)),
     new Big(0),
   );
-  const subtotalVenta = lineas.reduce(
+  const subtotalVentaIngredientes = lineas.reduce(
     (acc, l) => acc.plus(toBig(l.precioVentaLinea)),
     new Big(0),
   );
-  const ivaTotal = lineas.reduce(
-    (acc, l) => acc.plus(toBig(l.ivaLinea)),
-    new Big(0),
-  );
+
+  // Cargos de servicio (sin margen adicional)
+  const costoTransporte = entrada.transporte
+    ? calcularTransporte(entrada.transporte)
+    : new Big(0);
+  const costoMontaje = entrada.montaje
+    ? calcularMontaje(entrada.montaje)
+    : new Big(0);
+  const costoPersonal = entrada.personal
+    ? calcularPersonal(entrada.personal)
+    : new Big(0);
+
+  const subtotalServicios = costoTransporte.plus(costoMontaje).plus(costoPersonal);
+  const subtotalVenta = subtotalVentaIngredientes.plus(subtotalServicios);
+  const ivaTotal = toBig(subtotalVenta.times(ivaFactor).toFixed(2));
   const totalConIva = subtotalVenta.plus(ivaTotal);
 
   return {
     lineas,
     subtotalCosto: toMoney(subtotalCosto),
+    costoTransporte: toMoney(costoTransporte),
+    costoMontaje: toMoney(costoMontaje),
+    costoPersonal: toMoney(costoPersonal),
+    subtotalVentaIngredientes: toMoney(subtotalVentaIngredientes),
+    subtotalServicios: toMoney(subtotalServicios),
     subtotalVenta: toMoney(subtotalVenta),
     ivaTotal: toMoney(ivaTotal),
     totalConIva: toMoney(totalConIva),
@@ -265,7 +384,7 @@ export function cotizar(entrada: MotorEntrada): MotorSalidaInterna {
 }
 
 // ---------------------------------------------------------------------------
-// Vista para el cliente (sin costos ni márgenes)
+// Vista para el cliente (sin costos ni márgenes internos)
 // ---------------------------------------------------------------------------
 
 export function paraCliente(
@@ -279,6 +398,9 @@ export function paraCliente(
       ivaLinea: l.ivaLinea,
       totalLinea: l.totalLinea,
     })),
+    costoTransporte: salida.costoTransporte,
+    costoMontaje: salida.costoMontaje,
+    costoPersonal: salida.costoPersonal,
     subtotalVenta: salida.subtotalVenta,
     ivaTotal: salida.ivaTotal,
     totalConIva: salida.totalConIva,

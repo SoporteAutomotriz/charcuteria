@@ -8,6 +8,7 @@ interface BigInstance {
   lt(n: number | string | BigInstance): boolean;
   lte(n: number | string | BigInstance): boolean;
   minus(n: number | string | BigInstance): BigInstance;
+  mod(n: number | string | BigInstance): BigInstance;
   times(n: number | string | BigInstance): BigInstance;
   plus(n: number | string | BigInstance): BigInstance;
   toFixed(dp?: number): string;
