@@ -11,12 +11,7 @@ create table if not exists public.testing (
 -- 2. Activar RLS en la tabla
 alter table public.testing enable row level security;
 
--- 3. Política que permite SELECT al rol anon (solo lectura para prueba de hosting)
-create policy "Permitir SELECT al rol anon en testing"
-  on public.testing
-  for select
-  to anon
-  using (true);
-
--- 4. (Opcional) Insertar una fila de ejemplo para verificar que la lectura funciona
+-- (Opcional) Insertar una fila de ejemplo para verificar que la lectura funciona
+-- El acceso se hace exclusivamente desde /api/supabase-test con el cliente de
+-- servidor (service_role). No hay política para el rol anon.
 insert into public.testing (nombre) values ('fila de prueba 1') on conflict do nothing;

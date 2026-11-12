@@ -196,6 +196,7 @@ Banderas adicionales: **esperando\_cliente** (se pidió información) y **lista\
 - RLS en todas las tablas. El público no accede directo a la base de datos: las solicitudes entran por un endpoint de servidor y la cotización se lee por token.
 - Costos y márgenes en tablas separadas, inaccesibles para el público y para el Administrador.
 - El servidor valida todo y recalcula precios. Las claves privadas viven solo en el servidor.
+- El campo `total_venta` de las cotizaciones no tiene enforcer de base de datos (no hay CHECK ni trigger que lo valide): es una decisión de arquitectura consciente. El servidor de Next.js es la única fuente de verdad para los precios (sección 7) y nunca existe una ruta de escritura que acepte `total_venta` directa desde el cliente. Toda cotización se recalcula en el servidor antes de persistir.
 - Los enlaces de cotización usan tokens largos, aleatorios y con expiración.
 - La bitácora registra cambios en cotizaciones, precios, pagos y permisos.
 - Aviso de privacidad listo antes de publicar (validarlo con un profesional) y plazo de conservación o anonimización de solicitudes no concretadas: PENDIENTE-DUEÑO.
@@ -208,7 +209,7 @@ Banderas adicionales: **esperando\_cliente** (se pidió información) y **lista\
 **Hosting (decisión Fase 1 — ver docs/decisiones/001-hosting.md):** una prueba técnica con tres criterios: que despliegue, que lea Supabase desde el servidor y que el formulario con Turnstile funcione.
 
 - Opción A: vinext en Cloudflare Workers — **descartada**. El adaptador `@cloudflare/next-on-pages` está archivado y obsoleto desde septiembre de 2025, y el build estándar de Next.js no es servible directamente por Cloudflare Pages (404).
-- Opción B: Vercel — **adoptada**. Next.js corre de forma nativa, no requiere adaptador adicional. Revisar las condiciones de uso comercial del plan.
+- Opción B: Vercel — **adoptada**. Next.js corre de forma nativa, no requiere adaptador adicional. Desplegado en `https://charcuteria-iota.vercel.app`. Revisar las condiciones de uso comercial del plan.
 - Opción C: OpenNext en Workers — solo si A y B fallan.
 
 Se documenta la decisión y su causa en docs/decisiones/001-hosting.md. El código evita APIs específicas de una plataforma para poder cambiar de hosting.

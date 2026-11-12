@@ -1,0 +1,1 @@
+- [Fase 5: Configurador cliente](memory/fase-5-configurador-cliente.md) — Configurador público de 8 pasos (tabla/mesa, evento, paquete, ingredientes, servicios, lugar, contacto, resumen/envío) con estimado preliminar, token privado y cotización por token. Typecheck y lint en verde, 63 tests pasan. Pendiente: security review, tests de Fase 5, resumen propietario, commit.

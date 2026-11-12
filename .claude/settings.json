@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [],
+    "ask": [],
+    "deny": [
+      {
+        "tool": "Read",
+        "pattern": "./.env*"
+      },
+      {
+        "tool": "Read",
+        "pattern": "./supabase/.temp/**"
+      },
+      {
+        "tool": "Read",
+        "pattern": "./secrets/**"
+      }
+    ]
+  }
+}
