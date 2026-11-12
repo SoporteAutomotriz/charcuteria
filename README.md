@@ -52,6 +52,18 @@ CLOUDFLARE_TURNSTILE_SECRET_KEY=0x4AAAAAAF...
 
 ---
 
+## ⚠️ Nota importante — Proyecto Supabase en producción de Vercel
+
+El despliegue "Production" de Vercel (`https://charcuteria-iota.vercel.app`) está apuntando actualmente al proyecto de **desarrollo** de Supabase (`sujljkevonamhqbyszmz`), no al de producción real (`nyhcvgavbgextwempjcc`). Esto es intencional mientras estamos en fase de desarrollo, ya que es donde viven las migraciones y los usuarios de prueba (`@test.local`).
+
+**Antes del lanzamiento real (Fase 9) es necesario:**
+
+1. Aplicar todas las migraciones al proyecto de producción real `nyhcvgavbgextwempjcc`.
+2. Volver a apuntar las variables de entorno de Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`) al proyecto de producción.
+3. Crear los usuarios reales del Propietario y Administrador en Supabase Auth del proyecto de producción (sin correos `@test.local`) y darles sus filas en `usuarios_personal` con rol `propietario` y `administrador`.
+
+---
+
 ## Pruebas de integración de RLS (Supabase remoto)
 
 Las pruebas en `src/test/rls-integration.test.ts` validan Row Level Security con usuarios reales contra el proyecto de Supabase en la nube. **No crean usuarios**: requieren que existan previamente.
