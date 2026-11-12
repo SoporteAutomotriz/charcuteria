@@ -16,9 +16,11 @@ import { rateLimit, getClientIp, cleanupExpiredRateLimits } from "@/lib/rate-lim
  */
 export async function GET(request: NextRequest) {
   // 0. Rate limiting por IP (ventana de 60s, 60 requests por IP)
+  // Nota: el middleware también aplica rate limiting a esta ruta como
+  // primera línea de defensa. Esta llamada es defensa en profundidad.
   cleanupExpiredRateLimits();
   const clientIp = getClientIp(request);
-  const limit = rateLimit(clientIp, { maxRequests: 60, windowMs: 60_000 });
+  const limit = await rateLimit(clientIp, { maxRequests: 60, windowMs: 60_000 });
 
   if (!limit.allowed) {
     return NextResponse.json(

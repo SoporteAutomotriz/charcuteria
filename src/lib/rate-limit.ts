@@ -1,14 +1,14 @@
 /**
- * Rate limiting simple en memoria (ventana deslizante por IP).
+ * Rate limiting con soporte para almacén compartido (producción) o en memoria (desarrollo).
  *
  * Sirve para proteger endpoints públicos que consultan tablas privadas
  * (como /api/precios-venta, que usa service_role) contra scraping o
  * agotamiento de conexiones a Supabase.
  *
- * Nota: el almacén es en memoria, por lo que es efectivo en una sola
- * instancia (desarrollo/local). En producción (Vercel serverless) cada
- * función tiene su propio almacén; para protección distribuida se
- * debería usar un almacén compartido (Redis, Vercel KV, Upstash, etc.).
+ * Por defecto usa un almacén en memoria (Map), efectivo en una sola
+ * instancia. Para producción en Vercel serverless, donde cada función
+ * tiene su propio almacén, se puede inyectar un almacén compartido
+ * (Vercel KV, Upstash, Redis) pasando `externalStore` a `rateLimit`.
  */
 
 interface RateLimitEntry {
@@ -18,6 +18,15 @@ interface RateLimitEntry {
 
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
+/**
+ * Almacén externo opcional para producción distribuida.
+ * Debe implementar get(key) y set(key, value, ttlMs).
+ */
+export interface ExternalRateLimitStore {
+  get(key: string): Promise<RateLimitEntry | null>;
+  set(key: string, value: RateLimitEntry, ttlMs: number): Promise<void>;
+}
+
 export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
@@ -26,16 +35,53 @@ export interface RateLimitResult {
 
 /**
  * Verifica si la clave dada ha excedido el límite de requests en la ventana.
- * Retorna un resultado con allowed, remaining y resetTime.
+ *
+ * Si se proporciona `externalStore`, se usa ese almacén compartido (útil en
+ * producción con Vercel KV, Upstash o Redis). De lo contrario, usa el
+ * almacén en memoria local.
  */
-export function rateLimit(
+export async function rateLimit(
   key: string,
   options: { maxRequests: number; windowMs: number },
-): RateLimitResult {
+  externalStore?: ExternalRateLimitStore,
+): Promise<RateLimitResult> {
   const now = Date.now();
+
+  if (externalStore) {
+    const entry = await externalStore.get(key);
+
+    if (!entry || now > entry.resetTime) {
+      await externalStore.set(key, {
+        count: 1,
+        resetTime: now + options.windowMs,
+      }, options.windowMs);
+      return {
+        allowed: true,
+        remaining: options.maxRequests - 1,
+        resetTime: now + options.windowMs,
+      };
+    }
+
+    if (entry.count >= options.maxRequests) {
+      return {
+        allowed: false,
+        remaining: 0,
+        resetTime: entry.resetTime,
+      };
+    }
+
+    entry.count++;
+    await externalStore.set(key, entry, entry.resetTime - now);
+    return {
+      allowed: true,
+      remaining: options.maxRequests - entry.count,
+      resetTime: entry.resetTime,
+    };
+  }
+
+  // Almacén en memoria (desarrollo / una sola instancia)
   const entry = rateLimitStore.get(key);
 
-  // Entrada nueva o ventana expirada: reiniciar contador
   if (!entry || now > entry.resetTime) {
     rateLimitStore.set(key, { count: 1, resetTime: now + options.windowMs });
     return {
@@ -45,7 +91,6 @@ export function rateLimit(
     };
   }
 
-  // Límite alcanzado
   if (entry.count >= options.maxRequests) {
     return {
       allowed: false,
