@@ -18,7 +18,7 @@ export default async function ResumenPage() {
   cookieStore.set("idempotency_key", idempotencyKey, {
     httpOnly: true,
     sameSite: "lax",
-    path: "/cotizar/resumen",
+    path: "/",
     maxAge: 60 * 15, // 15 minutos
   });
 
