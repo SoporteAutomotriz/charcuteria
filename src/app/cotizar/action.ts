@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cotizar } from "@/lib/precios/motor";
 import { generarTokenCotizacion, fechaExpiracionToken } from "@/lib/panel/cotizaciones-token";
+import { generarFolioUnico } from "@/lib/cotizar/folio";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
 
@@ -311,11 +312,8 @@ export async function enviarSolicitud(formData: FormData) {
   const token = generarTokenCotizacion();
   const token_expires_en = fechaExpiracionToken();
 
-  // Folio con formato válido para el CHECK constraint: CS-YYYY-NNNN
-  const hoy = new Date();
-  const anio = hoy.getFullYear();
-  const secuencia = Date.now().toString().slice(-4).padStart(4, "0");
-  const folio = `CS-${anio}-${secuencia}`;
+  // Folio único con formato válido para el CHECK constraint: CS-YYYY-NNNN
+  const folio = await generarFolioUnico(supabase);
 
   const datosCliente = {
     nombre: clienteNombre || null,

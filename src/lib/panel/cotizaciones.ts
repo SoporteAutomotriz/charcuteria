@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cotizar } from "@/lib/precios/motor";
 import { requirePanelAccess } from "@/lib/auth/server";
 import { generarTokenCotizacion, fechaExpiracionToken } from "@/lib/panel/cotizaciones-token";
+import { generarFolioUnico } from "@/lib/cotizar/folio";
 import type { Database } from "@/types/database";
 
 export type CotizacionInsert = Database["public"]["Tables"]["cotizaciones"]["Insert"];
@@ -243,7 +244,7 @@ export async function crearCotizacion(formData: FormData) {
   const token_expires_en = fechaExpiracionToken();
 
   const cotizacion: CotizacionInsert = {
-    folio: `CS-${new Date().getFullYear()}-${Date.now().toString().slice(-4).padStart(4, "0")}`,
+    folio: await generarFolioUnico(supabase),
     estado: "borrador",
     datos_cliente: {
       nombre: clienteNombre || null,
