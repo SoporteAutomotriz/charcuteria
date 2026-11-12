@@ -8,7 +8,7 @@
  */
 
 import { cookies } from "next/headers";
-import { generarIdempotencyKey } from "../action";
+import { generarIdempotencyKey } from "@/lib/cotizar/idempotency";
 import ResumenForm from "./resumen-form";
 
 export default async function ResumenPage() {

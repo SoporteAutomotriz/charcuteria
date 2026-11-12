@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generarIdempotencyKey } from "./action";
+import { generarIdempotencyKey } from "@/lib/cotizar/idempotency";
 
 /**
  * Pruebas de la clave de idempotencia del Server Action (Fase 5).

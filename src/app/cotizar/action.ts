@@ -59,14 +59,6 @@ type EntradaMotor = Parameters<typeof cotizar>[0] & {
   };
 };
 
-/**
- * Genera una clave de idempotencia en el servidor (criptográficamente segura).
- * El cliente no la genera: la recibe oculta en el formulario y la devuelve.
- */
-export function generarIdempotencyKey(): string {
-  return `idem-${crypto.randomUUID()}`;
-}
-
 export async function enviarSolicitud(formData: FormData) {
   const idempotencyKey = formData.get("idempotency_key") as string;
 
