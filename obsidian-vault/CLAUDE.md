@@ -15,19 +15,21 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 11-11-2026
+Update this section every time you return to this vault. **Last updated:** 12-11-2026
 
 ### Working
 
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores)
-- `npm run test` en verde (Vitest: 73 pruebas pasando — 49 estáticas de RLS + 10 de integración + 14 del motor de precios)
+- `npm run test` en verde (Vitest: 118 pruebas pasando — incluye store, validaciones, estimado, action, cotizacion-publica, RLS estáticas; rls-integration falla solo por falta de env vars de Supabase, problema preexistente)
 - `npm run dev` funcionando en http://localhost:3000
 - `npm run build` exitoso (producción)
 - Despliegue en Vercel: https://charcuteria-iota.vercel.app (Fase 1 cerrada)
 - Fase 2 completa: migraciones 01-06 escritas, comiteadas y pusheadas en rama fase-2-base-datos-roles-rls
 - Fase 3 completa: motor de precios determinista cerrado, comiteado y pusheado (commits ec7fe91 y c54bc0c)
+- Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
+- Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 
 ### Working
 
@@ -36,15 +38,16 @@ Update this section every time you return to this vault. **Last updated:** 11-11
 - Migración 05: tablas privadas producto_costos, producto_margenes, paquete_margenes (solo rol propietario)
 - Migración 06: arregló recursión infinita de RLS en usuarios_personal y agregó columna actualizado_en
 - Fase 3 BD: sin nuevas migraciones (usa tablas privadas existentes de Fase 2)
+- Migración 09: función PL/pgSQL confirmar_cotizacion_atomica (confirmación atómica de cotización)
 
 ### Broken / Blocked
 
-- (ninguno — Fase 3 cerrada)
+- (ninguno — Fase 6 cerrada)
 
 ### Focus right now
 
-- Fase 4: Panel del propietario (catálogo, paquetes, tarifas, parámetros)
-- Archivos sueltos en working tree por revisar (docs/, obsidian-vault/, supabase/migrations/01_esquema_publico.sql)
+- Fase 7: Correo (Resend) y botón de WhatsApp — implementada, pendiente de deploy y configuración de variables de entorno (FROM_EMAIL, WHATSAPP_NUMBER, NEXT_PUBLIC_SITE_URL)
+- Pendientes menores Fase 6 (decisión del dueño): rate limiting distribuido para producción (Vercel KV/Upstash), invalidar token tras primera lectura, llenar columna ip en bitacora_auditoria
 
 **Importante:** No tocar el proyecto de producción conectado a Vercel en ningún momento.
 
