@@ -33,14 +33,6 @@ function hasRLS(sql: string, table: string): boolean {
   return re.test(sql);
 }
 
-function hasPolicy(sql: string, table: string, roleOrClause: string): boolean {
-  const re = new RegExp(
-    `create policy[\\s\\S]*?on public\\.${table}[\\s\\S]*?to (${roleOrClause})`,
-    "i"
-  );
-  return re.test(sql);
-}
-
 function hasPolicyForAllAuthenticated(sql: string, table: string): boolean {
   const re = new RegExp(
     `create policy[\\s\\S]*?on public\\.${table}[\\s\\S]*?to authenticated`,
