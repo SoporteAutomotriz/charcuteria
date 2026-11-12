@@ -17,6 +17,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { cotizar } from "@/lib/precios/motor";
 import { generarTokenCotizacion, fechaExpiracionToken } from "@/lib/panel/cotizaciones-token";
+import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
 
 export type CotizacionInsert = Database["public"]["Tables"]["cotizaciones"]["Insert"];
@@ -69,8 +70,15 @@ export function generarIdempotencyKey(): string {
 export async function enviarSolicitud(formData: FormData) {
   const idempotencyKey = formData.get("idempotency_key") as string;
 
+  // 0. Validar clave de idempotencia contra la cookie del servidor.
+  // El cliente no puede falsificarla: es httpOnly y solo el servidor la genera.
+  const cookieStore = await cookies();
+  const cookieKey = cookieStore.get("idempotency_key")?.value;
   if (!idempotencyKey || typeof idempotencyKey !== "string") {
     throw new Error("Falta la clave de idempotencia de la solicitud");
+  }
+  if (!cookieKey || idempotencyKey !== cookieKey) {
+    throw new Error("Clave de idempotencia inválida");
   }
 
   // Leer datos del formulario (envío del paso 8)
@@ -323,7 +331,6 @@ export async function enviarSolicitud(formData: FormData) {
     correo: clienteCorreo || null,
     canal_preferido: canalPreferido || null,
     acepta_privacidad: aceptaPrivacidad,
-    idempotency_key: idempotencyKey,
   };
 
   const datosEvento = {

@@ -2,14 +2,25 @@
  * Paso 8 del configurador: resumen y envío (wrapper servidor).
  *
  * Genera la clave de idempotencia en el servidor (criptográficamente segura)
- * y la pasa al formulario cliente. El cliente nunca genera la clave.
+ * y la almacena en una cookie httpOnly para que el cliente no pueda
+ * falsificarla. El cliente recibe la clave oculta en el formulario y la
+ * devuelve; el servidor valida que coincida con la cookie antes de aceptar.
  */
 
+import { cookies } from "next/headers";
 import { generarIdempotencyKey } from "../action";
 import ResumenForm from "./resumen-form";
 
 export default async function ResumenPage() {
+  const cookieStore = await cookies();
   const idempotencyKey = generarIdempotencyKey();
+
+  cookieStore.set("idempotency_key", idempotencyKey, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/cotizar/resumen",
+    maxAge: 60 * 15, // 15 minutos
+  });
 
   return <ResumenForm idempotencyKey={idempotencyKey} />;
 }
