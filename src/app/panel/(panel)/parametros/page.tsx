@@ -1,5 +1,6 @@
 "use server";
 
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getPanelSession, requirePanelAccess } from "@/lib/auth/server";
 import {
@@ -15,7 +16,29 @@ import type {
 
 export default async function ParametrosPage() {
   const session = await getPanelSession();
-  const rol = session?.rol;
+
+  // Bloqueo explícito: solo el propietario puede acceder a esta sección.
+  // Un Administrador que llegue directamente por URL ve un mensaje claro,
+  // no una página vacía ni datos internos que no debería ver.
+  if (!session || session.rol !== "propietario") {
+    return (
+      <div className="space-y-6 p-8 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold text-zinc-900">Sin acceso a esta sección</h1>
+        <p className="text-zinc-600 mb-6">
+          La edición de parámetros globales (margen global e IVA) es exclusiva
+          del propietario del negocio.
+        </p>
+        <Link
+          href="/panel"
+          className="text-sm text-blue-600 hover:underline"
+        >
+          Volver al inicio del panel
+        </Link>
+      </div>
+    );
+  }
+
+  const rol = session.rol;
   const parametros = await listarParametrosGlobales();
 
   return (

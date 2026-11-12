@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getPanelSession } from "@/lib/auth/server";
 import { signout } from "@/app/panel/auth/signout/action";
+import PanelMenu from "./panel-menu";
 
 export const dynamic = "force-dynamic";
 
@@ -29,24 +30,25 @@ export default async function PanelLayout({
               <span className="font-bold text-zinc-900">Charcutería</span>
               <span className="text-sm text-zinc-500">Panel del propietario</span>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-zinc-600">
-                {session.rol === "propietario" ? "Propietario" : "Administrador"}
-              </span>
-              <span className="text-sm text-zinc-600">{session.email}</span>
-              <form
-                action={signout}
-                method="POST"
-                className="inline"
+            <PanelMenu rol={session.rol} />
+          </div>
+          <div className="flex items-center gap-4 border-t border-zinc-100 mt-4 pt-4">
+            <span className="text-sm text-zinc-600">
+              {session.rol === "propietario" ? "Propietario" : "Administrador"}
+            </span>
+            <span className="text-sm text-zinc-600">{session.email}</span>
+            <form
+              action={signout}
+              method="POST"
+              className="inline"
+            >
+              <button
+                type="submit"
+                className="text-sm text-red-600 hover:underline"
               >
-                <button
-                  type="submit"
-                  className="text-sm text-red-600 hover:underline"
-                >
-                  Cerrar sesión
-                </button>
-              </form>
-            </div>
+                Cerrar sesión
+              </button>
+            </form>
           </div>
         </nav>
       </header>
