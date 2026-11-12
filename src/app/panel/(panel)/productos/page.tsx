@@ -215,6 +215,7 @@ export default async function ProductosPage() {
 }
 
 async function crearProductoForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const producto: ProductoInsert = {
     nombre: formData.get("nombre") as string,
@@ -243,6 +244,7 @@ async function crearProductoForm(formData: FormData) {
 }
 
 async function editarProductoForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   const cambios = {
@@ -277,6 +279,7 @@ async function editarProductoForm(formData: FormData) {
 }
 
 async function desactivarProductoForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   await desactivarProducto(id);

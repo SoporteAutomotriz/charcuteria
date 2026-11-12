@@ -218,6 +218,7 @@ async function PaqueteCard({
 }
 
 async function crearPaqueteForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const paquete: PaqueteInsert = {
     nombre: formData.get("nombre") as string,
@@ -232,6 +233,7 @@ async function crearPaqueteForm(formData: FormData) {
 }
 
 async function editarPaqueteForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   const cambios = {
@@ -247,6 +249,7 @@ async function editarPaqueteForm(formData: FormData) {
 }
 
 async function eliminarPaqueteForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   await eliminarPaquete(id);
@@ -254,6 +257,7 @@ async function eliminarPaqueteForm(formData: FormData) {
 }
 
 async function agregarComponenteForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const componente = {
     paquete_id: Number(formData.get("paquete_id")),

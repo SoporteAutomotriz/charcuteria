@@ -398,6 +398,7 @@ export default async function TarifasPage() {
 }
 
 async function crearZonaForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const municipiosRaw = (formData.get("municipios") as string) || "";
   const zona = {
@@ -419,6 +420,7 @@ async function crearZonaForm(formData: FormData) {
 }
 
 async function editarZonaForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   const municipiosRaw = (formData.get("municipios") as string) || "";
@@ -441,6 +443,7 @@ async function editarZonaForm(formData: FormData) {
 }
 
 async function eliminarZonaForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   await eliminarZonaTransporte(id);
@@ -448,6 +451,7 @@ async function eliminarZonaForm(formData: FormData) {
 }
 
 async function crearTarifaMontajeForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const tarifa = {
     tarifa_hora: Number(formData.get("tarifa_hora")) || 0,
@@ -462,6 +466,7 @@ async function crearTarifaMontajeForm(formData: FormData) {
 }
 
 async function editarTarifaMontajeForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   const cambios = {
@@ -477,6 +482,7 @@ async function editarTarifaMontajeForm(formData: FormData) {
 }
 
 async function eliminarTarifaMontajeForm(formData: FormData) {
+  'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   await eliminarTarifaMontaje(id);
