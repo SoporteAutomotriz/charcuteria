@@ -9,7 +9,8 @@
  * cotización con estado "recibida", genera un token privado con expiración y
  * guarda el desglose de costos en la tabla privada cotizaciones_costos.
  *
- * Usa una clave de idempotencia para evitar duplicados por recarga o doble clic.
+ * Usa una clave de idempotencia generada en el servidor para evitar duplicados
+ * por recarga o doble clic.
  */
 
 import { redirect } from "next/navigation";
@@ -58,9 +59,13 @@ type EntradaMotor = Parameters<typeof cotizar>[0] & {
 };
 
 /**
- * Clave de idempotencia del borrador actual (localStorage). El cliente debe
- * enviarla junto con la solicitud; el servidor rechaza duplicados.
+ * Genera una clave de idempotencia en el servidor (criptográficamente segura).
+ * El cliente no la genera: la recibe oculta en el formulario y la devuelve.
  */
+export function generarIdempotencyKey(): string {
+  return `idem-${crypto.randomUUID()}`;
+}
+
 export async function enviarSolicitud(formData: FormData) {
   const idempotencyKey = formData.get("idempotency_key") as string;
 
@@ -306,12 +311,58 @@ export async function enviarSolicitud(formData: FormData) {
   const token = generarTokenCotizacion();
   const token_expires_en = fechaExpiracionToken();
 
+  // Folio con formato válido para el CHECK constraint: CS-YYYY-NNNN
+  const hoy = new Date();
+  const anio = hoy.getFullYear();
+  const secuencia = Date.now().toString().slice(-4).padStart(4, "0");
+  const folio = `CS-${anio}-${secuencia}`;
+
+  const datosCliente = {
+    nombre: clienteNombre || null,
+    telefono: clienteTelefono || null,
+    correo: clienteCorreo || null,
+    canal_preferido: canalPreferido || null,
+    acepta_privacidad: aceptaPrivacidad,
+    idempotency_key: idempotencyKey,
+  };
+
+  const datosEvento = {
+    modalidad,
+    tipo: tipoEvento || null,
+    fecha: fechaEvento || null,
+    horario: horarioEvento || null,
+    invitados,
+    duracion,
+  };
+
+  const datosProductos = {
+    items,
+    productos: productosConCosto.map((p) => ({
+      id: p.id,
+      nombre: p.nombre,
+    })),
+  };
+
+  const datosPaquetes = {
+    servicios: {
+      montaje: montajeHoras > 0 ? { horas: montajeHoras } : null,
+      personal: personalHoras > 0 ? { horas: personalHoras, invitados: personalInvitados } : null,
+      transporte: zonaTransporteId ? { zona_id: zonaTransporteId } : null,
+    },
+    lugar: {
+      direccion: direccion || null,
+      municipio: municipio || null,
+      zona_transporte_id: zonaTransporteId || null,
+    },
+  };
+
   const cotizacion: CotizacionInsert = {
-    folio: `COT-${Date.now()}`,
+    folio,
     estado: "recibida",
-    cliente_nombre: clienteNombre || null,
-    cliente_telefono: clienteTelefono || null,
-    cliente_correo: clienteCorreo || null,
+    datos_cliente: datosCliente,
+    datos_evento: datosEvento,
+    datos_productos: datosProductos,
+    datos_paquetes: datosPaquetes,
     total_venta: salida.totalConIva,
     token,
     token_expires_en,
@@ -334,22 +385,8 @@ export async function enviarSolicitud(formData: FormData) {
     cotizacion_id: cotizacionData.id,
     total_costo: salida.subtotalCosto,
     datos_costo: {
-      datos_cliente: {
-        nombre: clienteNombre || null,
-        telefono: clienteTelefono || null,
-        correo: clienteCorreo || null,
-        canal_preferido: canalPreferido || null,
-        acepta_privacidad: aceptaPrivacidad,
-        idempotency_key: idempotencyKey,
-      },
-      datos_evento: {
-        modalidad,
-        tipo: tipoEvento || null,
-        fecha: fechaEvento || null,
-        horario: horarioEvento || null,
-        invitados,
-        duracion,
-      },
+      datos_cliente: datosCliente,
+      datos_evento: datosEvento,
       datos_lugar: {
         direccion: direccion || null,
         municipio: municipio || null,

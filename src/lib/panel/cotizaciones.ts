@@ -243,14 +243,19 @@ export async function crearCotizacion(formData: FormData) {
   const token_expires_en = fechaExpiracionToken();
 
   const cotizacion: CotizacionInsert = {
-    folio: `COT-${Date.now()}`,
+    folio: `CS-${new Date().getFullYear()}-${Date.now().toString().slice(-4).padStart(4, "0")}`,
     estado: "borrador",
-    cliente_nombre: clienteNombre || null,
-    cliente_telefono: clienteTelefono || null,
-    cliente_correo: clienteCorreo || null,
+    datos_cliente: {
+      nombre: clienteNombre || null,
+      telefono: clienteTelefono || null,
+      correo: clienteCorreo || null,
+    },
+    datos_evento: {},
+    datos_productos: {},
+    datos_paquetes: {},
+    total_venta: salida.totalConIva,
     token,
     token_expires_en,
-    total_venta: salida.totalConIva,
     creado_en: new Date().toISOString(),
     actualizado_en: new Date().toISOString(),
   };

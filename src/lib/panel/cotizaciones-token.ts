@@ -14,14 +14,18 @@ export function fechaExpiracionToken(dias = 7): string {
 
 /**
  * Valida que un token de cotización exista y no haya expirado.
- * Retorna la cotización si es válida, o null si no existe o expiró.
+ * Retorna SOLO datos públicos de la cotización (folio, estado, datos_cliente,
+ * datos_evento, datos_productos, datos_paquetes, total_venta, token_expires_en).
+ * Nunca expone costos ni márgenes internos (esos viven en cotizaciones_costos).
  */
 export async function validarTokenCotizacion(token: string) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("cotizaciones")
-    .select("*, cotizaciones_costos(total_costo, datos_costo, creado_en)")
+    .select(
+      "folio, estado, datos_cliente, datos_evento, datos_productos, datos_paquetes, total_venta, token_expires_en, creado_en",
+    )
     .eq("token", token)
     .single();
 
