@@ -13,6 +13,7 @@ import {
   EstadoCotizacion,
   ESTADOS_COTIZACION,
 } from "@/lib/panel/cotizaciones-tipos";
+import { generarEnlaceWhatsApp } from "@/lib/whatsapp/link";
 
 interface JsonContacto {
   nombre?: string | null;
@@ -154,6 +155,66 @@ export default function CotizacionDetalle({
       setCargando(false);
     }
   };
+
+  const [envioCargando, setEnvioCargando] = useState(false);
+  const [envioExito, setEnvioExito] = useState<string | null>(null);
+  const [envioError, setEnvioError] = useState<string | null>(null);
+  const [enviarCorreoOpen, setEnviarCorreoOpen] = useState(false);
+  const [destinatario, setDestinatario] = useState("");
+
+  const enlaceCotizacion = `/cotizaciones/${cotizacion.token}`;
+
+  const enviarCorreo = async (formData: FormData) => {
+    setEnvioCargando(true);
+    setEnvioError(null);
+    setEnvioExito(null);
+    try {
+      const email = formData.get("destinatario") as string;
+      const nombre = formData.get("nombre_cliente") as string;
+
+      const res = await fetch(
+        `/api/cotizaciones/${cotizacion.id}/enviar`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            destinatario: email,
+            nombreCliente: nombre || undefined,
+          }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Error al enviar el correo");
+      }
+
+      setEnvioExito("Correo enviado correctamente");
+      setEnviarCorreoOpen(false);
+      setDestinatario("");
+    } catch (e) {
+      setEnvioError(
+        e instanceof Error ? e.message : "Error al enviar el correo",
+      );
+    } finally {
+      setEnvioCargando(false);
+    }
+  };
+
+  const whatsapp = generarEnlaceWhatsApp({
+    folio: cotizacion.folio ?? "—",
+    enlaceCotizacion,
+    nombreCliente:
+      cotizacion.datos_cliente &&
+      typeof cotizacion.datos_cliente === "object" &&
+      !Array.isArray(cotizacion.datos_cliente)
+        ? ((cotizacion.datos_cliente as Record<string, unknown>).nombre as
+            | string
+            | undefined) ??
+          undefined
+        : undefined,
+  });
 
   const expiracion = new Date(cotizacion.token_expires_en);
   const vigente = expiracion > new Date();
@@ -533,6 +594,117 @@ export default function CotizacionDetalle({
           <p className="text-xs text-zinc-500 mt-2">
             El enlace expira el {new Date(cotizacion.token_expires_en).toLocaleDateString("es-MX")}.
           </p>
+        </div>
+
+        {/* Enviar por correo y WhatsApp */}
+        <div className="bg-white p-4 rounded-lg border border-zinc-200 mb-6">
+          <h2 className="text-sm font-semibold text-zinc-700 mb-3">
+            Compartir con el cliente
+          </h2>
+
+          <button
+            type="button"
+            onClick={() => {
+              setDestinatario(
+                (cotizacion.datos_cliente &&
+                  typeof cotizacion.datos_cliente === "object" &&
+                  !Array.isArray(cotizacion.datos_cliente)
+                  ? ((cotizacion.datos_cliente as Record<string, unknown>)
+                      .correo as string | undefined)
+                  : undefined) ??
+                ""
+              );
+              setEnviarCorreoOpen(true);
+            }}
+            disabled={cargando || envioCargando}
+            className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+          >
+            {envioCargando ? "Enviando..." : "Enviar por correo"}
+          </button>
+
+          {whatsapp.disponible ? (
+            <a
+              href={whatsapp.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2 mt-2"
+            >
+              📱 Contactar por WhatsApp
+            </a>
+          ) : (
+            <div className="w-full bg-amber-100 text-amber-700 px-4 py-2 rounded text-sm mt-2">
+              {whatsapp.motivoNoDisponible}
+            </div>
+          )}
+
+          {/* Modal de envío de correo */}
+          {enviarCorreoOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black opacity-50 backdrop-blur-sm" />
+              <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
+                <h3 className="text-lg font-bold text-zinc-900 mb-4">
+                  Enviar cotización por correo
+                </h3>
+                <form
+                  action={enviarCorreo}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                      Correo del cliente
+                    </label>
+                    <input
+                      name="destinatario"
+                      type="email"
+                      defaultValue={destinatario}
+                      required
+                      className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 mb-1">
+                      Nombre del cliente (opcional)
+                    </label>
+                    <input
+                      name="nombre_cliente"
+                      type="text"
+                      className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEnviarCorreoOpen(false);
+                        setDestinatario("");
+                      }}
+                      className="px-4 py-2 rounded text-zinc-600 hover:bg-zinc-100 font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={envioCargando}
+                      className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-medium"
+                    >
+                      {envioCargando ? "Enviando..." : "Enviar"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {envioExito && (
+            <div className="mt-3 p-3 rounded bg-green-50 border border-green-200 text-sm text-green-700">
+              {envioExito}
+            </div>
+          )}
+          {envioError && (
+            <div className="mt-3 p-3 rounded bg-red-50 border border-red-200 text-sm text-red-700">
+              {envioError}
+            </div>
+          )}
         </div>
       </div>
     </div>
