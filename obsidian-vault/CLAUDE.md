@@ -15,7 +15,7 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 12-11-2026
+Update this section every time you return to this vault. **Last updated:** 12-11-2026 — Fase 4 completada (protección de Server Actions del panel con requirePanelAccess).
 
 ### Working
 
@@ -28,6 +28,7 @@ Update this section every time you return to this vault. **Last updated:** 12-11
 - Despliegue en Vercel: https://charcuteria-iota.vercel.app (Fase 1 cerrada)
 - Fase 2 completa: migraciones 01-06 escritas, comiteadas y pusheadas en rama fase-2-base-datos-roles-rls
 - Fase 3 completa: motor de precios determinista cerrado, comiteado y pusheado (commits ec7fe91 y c54bc0c)
+- Fase 4 completa: panel del propietario para catálogo (productos, paquetes con componentes, zonas de transporte, tarifas de montaje, parámetros globales) — Server Actions de mutación protegidas con requirePanelAccess (rol propietario/administrador)
 - Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 
@@ -42,11 +43,11 @@ Update this section every time you return to this vault. **Last updated:** 12-11
 
 ### Broken / Blocked
 
-- (ninguno — Fase 6 cerrada)
+- (ninguno — Fase 4 cerrada)
 
 ### Focus right now
 
-- Fase 7: Correo (Resend) y botón de WhatsApp — implementada, pendiente de deploy y configuración de variables de entorno (FROM_EMAIL, WHATSAPP_NUMBER, NEXT_PUBLIC_SITE_URL)
+- Fase 4 completada: panel del propietario para catálogo (protección de Server Actions con requirePanelAccess). Listo para pasar a Fase 7 (deploy y configuración de env vars de Resend/WhatsApp).
 - Pendientes menores Fase 6 (decisión del dueño): rate limiting distribuido para producción (Vercel KV/Upstash), invalidar token tras primera lectura, llenar columna ip en bitacora_auditoria
 
 **Importante:** No tocar el proyecto de producción conectado a Vercel en ningún momento.
