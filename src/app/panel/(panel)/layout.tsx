@@ -17,6 +17,10 @@ export default async function PanelLayout({
 }) {
   const session = await getPanelSession();
 
+  // TEMPORAL: debug de rol para el menú de Parámetros
+  // eslint-disable-next-line no-console
+  console.log("[DEBUG layout] session.rol =", JSON.stringify(session?.rol));
+
   if (!session) {
     redirect("/panel/auth/signin");
   }

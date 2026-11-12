@@ -30,6 +30,9 @@ function estaActivo(href: string, pathname: string): boolean {
 }
 
 export default function PanelMenu({ rol }: PanelMenuProps) {
+  // TEMPORAL: debug de rol para el menú de Parámetros
+  // eslint-disable-next-line no-console
+  console.log("[DEBUG PanelMenu] rol recibido =", JSON.stringify(rol));
   const pathname = usePathname();
 
   return (
