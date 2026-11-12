@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePropietario } from "@/lib/auth/server";
 import type { Database } from "@/types/database";
 
 export type ParametroGlobal =
@@ -62,6 +63,8 @@ export async function obtenerParametroGlobal(
 export async function crearParametroGlobal(
   parametro: ParametroGlobalInsert,
 ): Promise<ParametroGlobal> {
+  await requirePropietario();
+
   validarValorNumerico(parametro.clave, parametro.valor);
 
   const supabase = await createClient();
@@ -82,6 +85,8 @@ export async function actualizarParametroGlobal(
   clave: string,
   cambios: ParametroGlobalUpdate,
 ): Promise<ParametroGlobal> {
+  await requirePropietario();
+
   if (cambios.valor !== undefined) {
     validarValorNumerico(clave, cambios.valor);
   }
@@ -102,6 +107,8 @@ export async function actualizarParametroGlobal(
 }
 
 export async function eliminarParametroGlobal(clave: string): Promise<void> {
+  await requirePropietario();
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("parametros_globales")

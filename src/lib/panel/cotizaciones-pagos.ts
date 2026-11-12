@@ -20,7 +20,13 @@ export async function registrarPago(formData: FormData) {
   const referencia = (formData.get("referencia") as string) || null;
   const comprobante = (formData.get("comprobante") as string) || null;
   const esAnticipo = formData.get("es_anticipo") === "on";
-  const verificar = formData.get("verificar") === "on" && session.rol === "propietario";
+  const verificarRaw = formData.get("verificar") === "on";
+
+  if (verificarRaw && session.rol !== "propietario") {
+    throw new Error("Solo el propietario puede verificar pagos");
+  }
+
+  const verificar = verificarRaw && session.rol === "propietario";
 
   if (!cotizacionId || !monto || monto <= 0) {
     throw new Error("Monto de pago inválido");

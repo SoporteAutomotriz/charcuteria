@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { requirePropietario } from "@/lib/auth/server";
 import { enviarCorreoCotizacion } from "@/lib/email/resend";
 import { generarEnlaceWhatsApp } from "@/lib/whatsapp/link";
 
@@ -25,6 +26,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  await requirePropietario();
+
   const { id } = await params;
   const cotizacionId = Number(id);
 

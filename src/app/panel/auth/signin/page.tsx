@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
@@ -9,23 +9,17 @@ export default function SignInPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const router = useRouter();
-
-  // Crear el cliente de Supabase solo en el cliente, no durante el
-  // prerenderizado estático (build time) donde faltan las variables de entorno.
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const supabase = mounted ? createClient() : null;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setLoading(true);
 
-    if (!supabase) return;
+    // Crear el cliente de Supabase solo en el cliente (al hacer submit), no
+    // durante el prerenderizado estático (build time) donde faltan las
+    // variables de entorno de Supabase.
+    const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,

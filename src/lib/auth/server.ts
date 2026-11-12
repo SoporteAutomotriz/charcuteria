@@ -50,3 +50,20 @@ export async function requirePanelAccess() {
 
   return session;
 }
+
+/**
+ * Verifica que el usuario tenga rol de propietario.
+ * Lanza error si no hay sesión o el rol no es propietario.
+ * Se usa solo para acciones exclusivas del propietario:
+ * cambio a estados "enviada" y "confirmada", aplicación de descuentos,
+ * envío de cotizaciones, verificación de pagos y edición de parámetros globales.
+ */
+export async function requirePropietario() {
+  const session = await requirePanelAccess();
+
+  if (session.rol !== "propietario") {
+    throw new Error("Acceso denegado: esta acción solo puede realizarla el propietario");
+  }
+
+  return session;
+}

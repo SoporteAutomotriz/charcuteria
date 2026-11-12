@@ -73,6 +73,7 @@ interface CotizacionDetalleProps {
     actualizado_en: string;
     descuento_pct?: number | null;
   };
+  rol: "propietario" | "administrador";
 }
 
 /**
@@ -81,6 +82,7 @@ interface CotizacionDetalleProps {
  */
 export default function CotizacionDetalle({
   cotizacion,
+  rol,
 }: CotizacionDetalleProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -301,22 +303,28 @@ export default function CotizacionDetalle({
           </h2>
           <form action={cambiarEstado} className="flex flex-wrap gap-3">
             <input name="id" defaultValue={String(cotizacion.id)} />
-            {ESTADOS_COTIZACION.map((estado) => (
-              <button
-                key={estado}
-                type="submit"
-                name="estado"
-                value={estado}
-                disabled={cargando}
-                className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
-                  cotizacion.estado === estado
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "bg-white text-zinc-600 border-zinc-300 hover:bg-zinc-50"
-                }`}
-              >
-                {estado.replace("_", " ")}
-              </button>
-            ))}
+            {ESTADOS_COTIZACION.map((estado) => {
+              // Los estados "enviada" y "confirmada" son exclusivos del propietario
+              if (rol === "administrador" && (estado === "enviada" || estado === "confirmada")) {
+                return null;
+              }
+              return (
+                <button
+                  key={estado}
+                  type="submit"
+                  name="estado"
+                  value={estado}
+                  disabled={cargando}
+                  className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                    cotizacion.estado === estado
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-zinc-600 border-zinc-300 hover:bg-zinc-50"
+                  }`}
+                >
+                  {estado.replace("_", " ")}
+                </button>
+              );
+            })}
           </form>
           {error && (
             <div className="mt-3 p-3 rounded bg-red-50 border border-red-200 text-sm text-red-700">
@@ -453,34 +461,36 @@ export default function CotizacionDetalle({
           </div>
         )}
 
-        {/* Aplicar descuento */}
-        <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-6">
-          <h2 className="text-sm font-semibold text-amber-800 mb-3">
-            Aplicar descuento (solo propietario)
-          </h2>
-          <form action={aplicarDescuentoForm} className="flex flex-wrap gap-3">
-            <input name="id" defaultValue={String(cotizacion.id)} />
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-zinc-700">Descuento %</label>
-              <input
-                name="descuento_pct"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
-                defaultValue={String(descuentoActual)}
-                className="w-20 border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={cargando}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-medium"
-            >
-              Aplicar
-            </button>
-          </form>
-        </div>
+        {/* Aplicar descuento (solo propietario) */}
+        {rol === "propietario" && (
+          <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 mb-6">
+            <h2 className="text-sm font-semibold text-amber-800 mb-3">
+              Aplicar descuento
+            </h2>
+            <form action={aplicarDescuentoForm} className="flex flex-wrap gap-3">
+              <input name="id" defaultValue={String(cotizacion.id)} />
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-zinc-700">Descuento %</label>
+                <input
+                  name="descuento_pct"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  defaultValue={String(descuentoActual)}
+                  className="w-20 border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={cargando}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-medium"
+              >
+                Aplicar
+              </button>
+            </form>
+          </div>
+        )}
 
         {/* Registro de pago */}
         <div className="bg-white p-4 rounded-lg border border-zinc-200 mb-6">
@@ -544,15 +554,17 @@ export default function CotizacionDetalle({
               </label>
             </div>
             <div className="col-span-1 sm:col-span-1 flex items-end">
-              <label className="flex items-center gap-2 text-sm text-zinc-700 cursor-pointer">
-                <input
-                  type="checkbox"
-                  name="verificar"
-                  defaultChecked={false}
-                  className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
-                />
-                Verificar pago
-              </label>
+              {rol === "propietario" && (
+                <label className="flex items-center gap-2 text-sm text-zinc-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="verificar"
+                    defaultChecked={false}
+                    className="rounded border-zinc-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  Verificar pago
+                </label>
+              )}
               <p className="text-xs text-zinc-500 mt-1">
                 Solo propietario puede verificar
               </p>
@@ -602,25 +614,27 @@ export default function CotizacionDetalle({
             Compartir con el cliente
           </h2>
 
-          <button
-            type="button"
-            onClick={() => {
-              setDestinatario(
-                (cotizacion.datos_cliente &&
-                  typeof cotizacion.datos_cliente === "object" &&
-                  !Array.isArray(cotizacion.datos_cliente)
-                  ? ((cotizacion.datos_cliente as Record<string, unknown>)
-                      .correo as string | undefined)
-                  : undefined) ??
-                ""
-              );
-              setEnviarCorreoOpen(true);
-            }}
-            disabled={cargando || envioCargando}
-            className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
-          >
-            {envioCargando ? "Enviando..." : "Enviar por correo"}
-          </button>
+          {rol === "propietario" && (
+            <button
+              type="button"
+              onClick={() => {
+                setDestinatario(
+                  (cotizacion.datos_cliente &&
+                    typeof cotizacion.datos_cliente === "object" &&
+                    !Array.isArray(cotizacion.datos_cliente)
+                    ? ((cotizacion.datos_cliente as Record<string, unknown>)
+                        .correo as string | undefined)
+                    : undefined) ??
+                  ""
+                );
+                setEnviarCorreoOpen(true);
+              }}
+              disabled={cargando || envioCargando}
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-medium flex items-center justify-center gap-2"
+            >
+              {envioCargando ? "Enviando..." : "Enviar por correo"}
+            </button>
+          )}
 
           {whatsapp.disponible ? (
             <a

@@ -1,19 +1,21 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { getPanelSession, requirePanelAccess } from "@/lib/auth/server";
 import {
   listarParametrosGlobales,
   crearParametroGlobal,
   actualizarParametroGlobal,
   eliminarParametroGlobal,
 } from "@/lib/panel/parametros";
-import { requirePanelAccess } from "@/lib/auth/server";
 import type {
   ParametroGlobalInsert,
   ParametroGlobalUpdate,
 } from "@/lib/panel/parametros";
 
 export default async function ParametrosPage() {
+  const session = await getPanelSession();
+  const rol = session?.rol;
   const parametros = await listarParametrosGlobales();
 
   return (
@@ -27,56 +29,60 @@ export default async function ParametrosPage() {
         </p>
       </div>
 
-      <form
-        action={crearParametroForm}
-        className="space-y-4 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm"
-      >
-        <h2 className="text-lg font-semibold text-zinc-900 mb-4">Nuevo parámetro</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
-              Clave
-            </label>
-            <input
-              name="clave"
-              required
-              placeholder="Ej: iva_pct"
-              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            />
+      {rol === "propietario" && (
+        <form
+          action={crearParametroForm}
+          className="space-y-4 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm"
+        >
+          <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+            Nuevo parámetro
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Clave
+              </label>
+              <input
+                name="clave"
+                required
+                placeholder="Ej: iva_pct"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Valor (numérico)
+              </label>
+              <input
+                name="valor"
+                required
+                type="number"
+                step="0.01"
+                defaultValue="0"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Descripción
+              </label>
+              <textarea
+                name="descripcion"
+                rows={2}
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-medium"
+              >
+                Crear parámetro
+              </button>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
-              Valor (numérico)
-            </label>
-            <input
-              name="valor"
-              required
-              type="number"
-              step="0.01"
-              defaultValue="0"
-              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            />
-          </div>
-          <div className="col-span-full sm:col-span-2">
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
-              Descripción
-            </label>
-            <textarea
-              name="descripcion"
-              rows={2}
-              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            />
-          </div>
-          <div className="flex items-end">
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-medium"
-            >
-              Crear parámetro
-            </button>
-          </div>
-        </div>
-      </form>
+        </form>
+      )}
 
       <div className="bg-white p-6 rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
         <table className="w-full text-left">
@@ -115,20 +121,24 @@ export default async function ParametrosPage() {
                   {new Date(p.creado_en).toLocaleDateString("es-MX")}
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    formAction={editarParametroForm}
-                    form={`parametro-${p.clave}`}
-                    className="text-sm text-blue-600 hover:underline mr-2"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    formAction={eliminarParametroForm}
-                    form={`eliminar-parametro-${p.clave}`}
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    Eliminar
-                  </button>
+                  {rol === "propietario" && (
+                    <>
+                      <button
+                        formAction={editarParametroForm}
+                        form={`parametro-${p.clave}`}
+                        className="text-sm text-blue-600 hover:underline mr-2"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        formAction={eliminarParametroForm}
+                        form={`eliminar-parametro-${p.clave}`}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

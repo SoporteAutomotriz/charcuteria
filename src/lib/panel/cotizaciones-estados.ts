@@ -3,19 +3,30 @@
 import Big from "big.js";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requirePanelAccess } from "@/lib/auth/server";
+import { requirePanelAccess, requirePropietario } from "@/lib/auth/server";
 import type { EstadoCotizacion } from "@/lib/panel/cotizaciones-tipos";
 
 /**
- * Cambia el estado de una cotización (solo propietario).
+ * Cambia el estado de una cotización (solo propietario o administrador).
  * Al pasar a "enviada" por primera vez, el trigger de BD (migración 3)
  * congela automáticamente la versión 1 en cotizacion_versiones.
+ *
+ * Estados exclusivos del propietario: "enviada" y "confirmada".
+ * El administrador puede cambiar a cualquier otro estado.
  */
 export async function actualizarEstadoCotizacion(
   id: number,
   estado: EstadoCotizacion,
 ) {
   await requirePanelAccess();
+
+  const estadosSoloPropietario: EstadoCotizacion[] = ["enviada", "confirmada"];
+
+  if (
+    estadosSoloPropietario.includes(estado)
+  ) {
+    await requirePropietario();
+  }
 
   const supabase = await createClient();
 
@@ -37,7 +48,7 @@ export async function actualizarEstadoCotizacion(
  * El total final se recalcula aplicando el descuento sobre total_venta.
  */
 export async function aplicarDescuento(id: number, descuentoPct: number) {
-  await requirePanelAccess();
+  await requirePropietario();
 
   const supabase = await createClient();
 

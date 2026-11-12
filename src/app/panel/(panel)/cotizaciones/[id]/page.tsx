@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getPanelSession } from "@/lib/auth/server";
 import { obtenerCotizacionPanel } from "@/lib/panel/cotizaciones-panel";
 import CotizacionDetalle from "./detalle";
 
@@ -14,7 +15,31 @@ export default async function CotizacionPanelPage({
   const { id } = await params;
   const cotizacionId = Number(id);
 
-  const cotizacion = await obtenerCotizacionPanel(cotizacionId);
+  const [session, cotizacion] = await Promise.all([
+    getPanelSession(),
+    obtenerCotizacionPanel(cotizacionId),
+  ]);
+
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-zinc-50 font-sans py-8 px-4 flex items-center justify-center">
+        <div className="max-w-md mx-auto bg-white p-8 rounded-lg border border-zinc-200 shadow-sm text-center">
+          <h1 className="text-xl font-bold text-zinc-900 mb-2">
+            Sesión requerida
+          </h1>
+          <p className="text-zinc-600 mb-4">
+            Inicia sesión para acceder al panel.
+          </p>
+          <Link
+            href="/panel/auth/signin"
+            className="text-sm text-blue-600 hover:underline"
+          >
+            Iniciar sesión
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!cotizacion) {
     return (
@@ -34,5 +59,5 @@ export default async function CotizacionPanelPage({
     );
   }
 
-  return <CotizacionDetalle cotizacion={cotizacion} />;
+  return <CotizacionDetalle cotizacion={cotizacion} rol={session.rol} />;
 }
