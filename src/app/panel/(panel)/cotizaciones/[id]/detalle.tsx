@@ -301,7 +301,7 @@ export default function CotizacionDetalle({
           <h2 className="text-sm font-semibold text-zinc-700 mb-3">
             Cambiar estado
           </h2>
-          <form action={cambiarEstado} className="flex flex-wrap gap-3">
+          <form onSubmit={(e) => { e.preventDefault(); cambiarEstado(new FormData(e.currentTarget)); }} className="flex flex-wrap gap-3">
             <input name="id" defaultValue={String(cotizacion.id)} />
             {ESTADOS_COTIZACION.map((estado) => {
               // Los estados "enviada" y "confirmada" son exclusivos del propietario
@@ -467,7 +467,7 @@ export default function CotizacionDetalle({
             <h2 className="text-sm font-semibold text-amber-800 mb-3">
               Aplicar descuento
             </h2>
-            <form action={aplicarDescuentoForm} className="flex flex-wrap gap-3">
+            <form onSubmit={(e) => { e.preventDefault(); aplicarDescuentoForm(new FormData(e.currentTarget)); }} className="flex flex-wrap gap-3">
               <input name="id" defaultValue={String(cotizacion.id)} />
               <div className="flex items-center gap-2">
                 <label className="text-sm text-zinc-700">Descuento %</label>
@@ -497,7 +497,7 @@ export default function CotizacionDetalle({
           <h2 className="text-sm font-semibold text-zinc-700 mb-3">
             Registrar pago
           </h2>
-          <form action={registrarPagoForm} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <form onSubmit={(e) => { e.preventDefault(); registrarPagoForm(new FormData(e.currentTarget)); }} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <input name="cotizacion_id" defaultValue={String(cotizacion.id)} />
             <div className="col-span-1 sm:col-span-2">
               <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -660,7 +660,7 @@ export default function CotizacionDetalle({
                   Enviar cotización por correo
                 </h3>
                 <form
-                  action={enviarCorreo}
+                  onSubmit={(e) => { e.preventDefault(); enviarCorreo(new FormData(e.currentTarget)); }}
                   className="space-y-4"
                 >
                   <div>
