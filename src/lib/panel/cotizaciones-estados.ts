@@ -1,22 +1,10 @@
+"use server";
+
 import Big from "big.js";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requirePanelAccess } from "@/lib/auth/server";
-import type { Database } from "@/types/database";
-
-export type EstadoCotizacion =
-  Database["public"]["Tables"]["cotizaciones"]["Row"]["estado"];
-
-export const ESTADOS_COTIZACION: EstadoCotizacion[] = [
-  "recibida",
-  "en_revision",
-  "enviada",
-  "aceptada",
-  "confirmada",
-  "realizada",
-  "cancelada",
-  "vencida",
-];
+import type { EstadoCotizacion } from "@/lib/panel/cotizaciones-tipos";
 
 /**
  * Cambia el estado de una cotización (solo propietario).

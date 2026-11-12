@@ -7,10 +7,12 @@ import Link from "next/link";
 import {
   actualizarEstadoCotizacion,
   aplicarDescuento,
-  type EstadoCotizacion,
 } from "@/lib/panel/cotizaciones-estados";
 import { registrarPago } from "@/lib/panel/cotizaciones-pagos";
-import { ESTADOS_COTIZACION } from "@/lib/panel/cotizaciones-estados";
+import {
+  EstadoCotizacion,
+  ESTADOS_COTIZACION,
+} from "@/lib/panel/cotizaciones-tipos";
 
 interface JsonContacto {
   nombre?: string | null;
