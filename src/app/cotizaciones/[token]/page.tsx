@@ -51,7 +51,6 @@ export default async function CotizacionPublicaPage({
   const vigente = expiracion > new Date();
 
   const datosEvento = cotizacion.datos_evento;
-  const datosCliente = cotizacion.datos_cliente;
   const datosProductos = cotizacion.datos_productos;
   const datosPaquetes = cotizacion.datos_paquetes;
 
@@ -189,26 +188,6 @@ export default async function CotizacionPublicaPage({
                     </dd>
                   </>
                 )}
-              </dl>
-            </div>
-          )}
-
-          {datosCliente && (
-            <div className="bg-zinc-50 p-4 rounded-lg mb-6">
-              <h2 className="text-sm font-semibold text-zinc-700 mb-3">
-                Datos de contacto
-              </h2>
-              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                <dt className="text-zinc-500">Nombre</dt>
-                <dd className="text-zinc-900">{datosCliente.nombre ?? "—"}</dd>
-                <dt className="text-zinc-500">Teléfono</dt>
-                <dd className="text-zinc-900">{datosCliente.telefono ?? "—"}</dd>
-                <dt className="text-zinc-500">Correo</dt>
-                <dd className="text-zinc-900">{datosCliente.correo ?? "—"}</dd>
-                <dt className="text-zinc-500">Canal preferido</dt>
-                <dd className="text-zinc-900">
-                  {datosCliente.canal_preferido ?? "—"}
-                </dd>
               </dl>
             </div>
           )}

@@ -10,7 +10,7 @@ export async function obtenerCotizacionPublica(token: string) {
   const { data, error } = await supabase
     .from("cotizaciones")
     .select(
-      "folio, estado, datos_cliente, datos_evento, datos_productos, datos_paquetes, total_venta, token_expires_en, creado_en",
+      "folio, estado, datos_evento, datos_productos, datos_paquetes, total_venta, token_expires_en, creado_en",
     )
     .eq("token", token)
     .single();
