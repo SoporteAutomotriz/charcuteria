@@ -1,5 +1,3 @@
-"use server";
-
 import { createClient } from "@/lib/supabase/server";
 import { requirePanelAccess } from "@/lib/auth/server";
 
@@ -151,15 +149,4 @@ export async function eliminarFotoProducto(ruta: string): Promise<void> {
   if (error) {
     throw new Error(`Error al eliminar la foto: ${error.message}`);
   }
-}
-
-/**
- * Construye la URL pública de un objeto en el bucket 'productos'.
- */
-export function urlPublicaFotoProducto(ruta: string): string {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) {
-    throw new Error("Falta NEXT_PUBLIC_SUPABASE_URL");
-  }
-  return `${supabaseUrl}/storage/v1/object/public/productos/${ruta}`;
 }

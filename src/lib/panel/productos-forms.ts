@@ -1,0 +1,199 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { requirePanelAccess } from "@/lib/auth/server";
+import {
+  subirFotoProducto,
+  renombrarFotoProducto,
+  eliminarFotoProducto,
+} from "@/lib/storage/productos";
+import { urlPublicaFotoProducto } from "@/lib/storage/url";
+import {
+  crearProducto,
+  actualizarProducto,
+  desactivarProducto,
+  listarCategorias,
+  type Producto,
+  type ProductoInsert,
+} from "@/lib/panel/productos";
+
+/**
+ * Lista los productos con su categoría para la vista de administración.
+ */
+export async function listarProductosConCategorias(): Promise<
+  Array<Producto & { categorias?: { nombre: string | null } | null }>
+> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("productos")
+    .select("*, categorias(nombre)")
+    .order("orden_visualizacion", { ascending: true });
+
+  if (error) {
+    throw new Error(`Error al listar productos: ${error.message}`);
+  }
+
+  return (data ?? []) as Array<
+    Producto & { categorias?: { nombre: string | null } | null }
+  >;
+}
+
+/**
+ * Lista las categorías para el desplegable del formulario.
+ */
+export async function listarCategoriasParaForm(): Promise<
+  Array<{ id: number; nombre: string }>
+> {
+  const categorias = await listarCategorias();
+  return categorias.map((c) => ({ id: c.id, nombre: c.nombre }));
+}
+
+/**
+ * Form handler para crear un producto.
+ * Si se incluye un archivo en `foto`, se sube a Storage con nombre temporal,
+ * se crea el producto, y luego se renombra el archivo con el ID definitivo.
+ */
+export async function crearProductoForm(formData: FormData) {
+  'use server';
+  await requirePanelAccess();
+
+  const archivo = formData.get("foto") as File | null;
+  let fotoUrl: string | null = null;
+  let nombreArchivoTemporal: string | null = null;
+
+  if (archivo) {
+    const { ruta, nombreArchivo } = await subirFotoProducto(archivo, {
+      tipo: "producto",
+    });
+    nombreArchivoTemporal = nombreArchivo;
+    fotoUrl = urlPublicaFotoProducto(ruta);
+  }
+
+  const producto: ProductoInsert = {
+    nombre: formData.get("nombre") as string,
+    categoria_id:
+      formData.get("categoria_id") === ""
+        ? null
+        : Number(formData.get("categoria_id")),
+    descripcion: (formData.get("descripcion") as string) || null,
+    foto_url: fotoUrl,
+    orden_visualizacion: Number(formData.get("orden_visualizacion")) || 0,
+    unidad_compra: (formData.get("unidad_compra") as string) || "kg",
+    unidad_venta: (formData.get("unidad_venta") as string) || "pieza",
+    factor_conversion: Number(formData.get("factor_conversion")) || 1,
+    merma_pct: Number(formData.get("merma_pct")) || 0,
+    porcion_referencia_persona:
+      formData.get("porcion_referencia_persona") === ""
+        ? null
+        : Number(formData.get("porcion_referencia_persona")),
+    alergenos: null,
+    etiquetas: null,
+    estado: "activo",
+  };
+
+  const productoCreado = await crearProducto(producto);
+
+  // Renombrar el archivo con el ID definitivo y actualizar la URL
+  if (nombreArchivoTemporal && productoCreado.id) {
+    const rutaNueva = await renombrarFotoProducto(nombreArchivoTemporal, {
+      tipo: "producto",
+      id: productoCreado.id,
+    });
+    const fotoUrlDefinitiva = urlPublicaFotoProducto(rutaNueva);
+    await actualizarProducto(productoCreado.id, { foto_url: fotoUrlDefinitiva });
+  }
+
+  redirect("/panel/productos");
+}
+
+/**
+ * Form handler para editar un producto.
+ * Permite reemplazar la foto o eliminarla.
+ */
+export async function editarProductoForm(formData: FormData) {
+  'use server';
+  await requirePanelAccess();
+
+  const id = Number(formData.get("id"));
+  const archivo = formData.get("foto") as File | null;
+  const eliminarFotoRaw = formData.get("eliminar_foto") === "on";
+
+  // Obtener el producto actual para saber si hay foto previa
+  const supabase = await createClient();
+  const { data: productoActual } = await supabase
+    .from("productos")
+    .select("foto_url")
+    .eq("id", id)
+    .single();
+
+  let fotoUrl: string | null = null;
+  let rutaAnterior: string | null = null;
+
+  if (productoActual?.foto_url) {
+    fotoUrl = productoActual.foto_url;
+    // Extraer la ruta del objeto desde la URL pública
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      const base = `${supabaseUrl}/storage/v1/object/public/productos/`;
+      if (productoActual.foto_url.startsWith(base)) {
+        rutaAnterior = productoActual.foto_url.slice(base.length);
+      }
+    }
+  }
+
+  if (eliminarFotoRaw) {
+    // Eliminar la foto de Storage y poner foto_url en null
+    if (rutaAnterior) {
+      await eliminarFotoProducto(rutaAnterior);
+    }
+    fotoUrl = null;
+  } else if (archivo) {
+    // Subir la nueva foto sobrescribiendo la anterior (misma ruta con el ID)
+    const ext = archivo.name.split(".").pop() ?? "";
+    const rutaDefinitiva = `producto-${id}.${ext}`;
+    await subirFotoProducto(archivo, { tipo: "producto", idDefinitivo: id });
+    fotoUrl = urlPublicaFotoProducto(rutaDefinitiva);
+  }
+
+  const cambios: Partial<Producto> = {
+    nombre: formData.get("nombre") as string,
+    categoria_id:
+      formData.get("categoria_id") === ""
+        ? null
+        : Number(formData.get("categoria_id")),
+    descripcion: (formData.get("descripcion") as string) || null,
+    foto_url: fotoUrl,
+    orden_visualizacion: Number(formData.get("orden_visualizacion")) || 0,
+    unidad_compra: (formData.get("unidad_compra") as string) || "kg",
+    unidad_venta: (formData.get("unidad_venta") as string) || "pieza",
+    factor_conversion: Number(formData.get("factor_conversion")) || 1,
+    merma_pct: Number(formData.get("merma_pct")) || 0,
+    porcion_referencia_persona:
+      formData.get("porcion_referencia_persona") === ""
+        ? null
+        : Number(formData.get("porcion_referencia_persona")),
+    alergenos: null,
+    etiquetas: null,
+    estado: (() => {
+      const estadoStr = formData.get("estado") as string;
+      return ["activo", "agotado_temporal", "inactivo"].includes(estadoStr)
+        ? (estadoStr as Producto["estado"])
+        : "activo";
+    })(),
+  };
+
+  await actualizarProducto(id, cambios);
+  redirect("/panel/productos");
+}
+
+/**
+ * Form handler para desactivar un producto.
+ */
+export async function desactivarProductoForm(formData: FormData) {
+  'use server';
+  await requirePanelAccess();
+  const id = Number(formData.get("id"));
+  await desactivarProducto(id);
+  redirect("/panel/productos");
+}
