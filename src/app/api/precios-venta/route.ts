@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { cotizar, paraCliente } from "@/lib/precios/motor";
+import { rateLimit, getClientIp, cleanupExpiredRateLimits } from "@/lib/rate-limit";
 
 /**
  * Endpoint público: devuelve precios de venta unitarios de productos activos.
@@ -9,8 +10,23 @@ import { cotizar, paraCliente } from "@/lib/precios/motor";
  * y márgenes de tablas privadas (service_role). Retorna SOLO datos aptos para
  * el cliente: ID, nombre, categoría y precio de venta. Nunca expone costos
  * ni márgenes internos.
+ *
+ * Rate limiting por IP para proteger contra scraping y agotamiento de
+ * conexiones a Supabase (usa service_role para leer tablas privadas).
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // 0. Rate limiting por IP (ventana de 60s, 60 requests por IP)
+  cleanupExpiredRateLimits();
+  const clientIp = getClientIp(request);
+  const limit = rateLimit(clientIp, { maxRequests: 60, windowMs: 60_000 });
+
+  if (!limit.allowed) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta de nuevo más tarde." },
+      { status: 429 },
+    );
+  }
+
   const supabase = await createAdminClient();
 
   // 1. Leer productos activos
