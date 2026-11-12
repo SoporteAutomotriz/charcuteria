@@ -11,6 +11,7 @@ import {
   type Paquete,
   type PaqueteInsert,
 } from "@/lib/panel/paquetes";
+import { requirePanelAccess } from "@/lib/auth/server";
 
 export default async function PaquetesPage() {
   const paquetes = await listarPaquetes();
@@ -217,6 +218,7 @@ async function PaqueteCard({
 }
 
 async function crearPaqueteForm(formData: FormData) {
+  await requirePanelAccess();
   const paquete: PaqueteInsert = {
     nombre: formData.get("nombre") as string,
     descripcion: (formData.get("descripcion") as string) || null,
@@ -230,6 +232,7 @@ async function crearPaqueteForm(formData: FormData) {
 }
 
 async function editarPaqueteForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   const cambios = {
     nombre: formData.get("nombre") as string,
@@ -244,12 +247,14 @@ async function editarPaqueteForm(formData: FormData) {
 }
 
 async function eliminarPaqueteForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   await eliminarPaquete(id);
   redirect("/panel/paquetes");
 }
 
 async function agregarComponenteForm(formData: FormData) {
+  await requirePanelAccess();
   const componente = {
     paquete_id: Number(formData.get("paquete_id")),
     nombre: formData.get("nombre") as string,

@@ -10,6 +10,7 @@ import {
   type Producto,
   type ProductoInsert,
 } from "@/lib/panel/productos";
+import { requirePanelAccess } from "@/lib/auth/server";
 
 export default async function ProductosPage() {
   const [productos, categorias] = await Promise.all([
@@ -214,6 +215,7 @@ export default async function ProductosPage() {
 }
 
 async function crearProductoForm(formData: FormData) {
+  await requirePanelAccess();
   const producto: ProductoInsert = {
     nombre: formData.get("nombre") as string,
     categoria_id:
@@ -241,6 +243,7 @@ async function crearProductoForm(formData: FormData) {
 }
 
 async function editarProductoForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   const cambios = {
     nombre: formData.get("nombre") as string,
@@ -274,6 +277,7 @@ async function editarProductoForm(formData: FormData) {
 }
 
 async function desactivarProductoForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   await desactivarProducto(id);
   redirect("/panel/productos");

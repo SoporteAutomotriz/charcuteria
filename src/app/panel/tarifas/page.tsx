@@ -11,6 +11,7 @@ import {
   actualizarTarifaMontaje,
   eliminarTarifaMontaje,
 } from "@/lib/panel/tarifas";
+import { requirePanelAccess } from "@/lib/auth/server";
 
 export default async function TarifasPage() {
   const [zonas, tarifasMontaje] = await Promise.all([
@@ -397,6 +398,7 @@ export default async function TarifasPage() {
 }
 
 async function crearZonaForm(formData: FormData) {
+  await requirePanelAccess();
   const municipiosRaw = (formData.get("municipios") as string) || "";
   const zona = {
     nombre: formData.get("nombre") as string,
@@ -417,6 +419,7 @@ async function crearZonaForm(formData: FormData) {
 }
 
 async function editarZonaForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   const municipiosRaw = (formData.get("municipios") as string) || "";
   const cambios = {
@@ -438,12 +441,14 @@ async function editarZonaForm(formData: FormData) {
 }
 
 async function eliminarZonaForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   await eliminarZonaTransporte(id);
   redirect("/panel/tarifas");
 }
 
 async function crearTarifaMontajeForm(formData: FormData) {
+  await requirePanelAccess();
   const tarifa = {
     tarifa_hora: Number(formData.get("tarifa_hora")) || 0,
     horas_minimas: Number(formData.get("horas_minimas")) || 0,
@@ -457,6 +462,7 @@ async function crearTarifaMontajeForm(formData: FormData) {
 }
 
 async function editarTarifaMontajeForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   const cambios = {
     tarifa_hora: Number(formData.get("tarifa_hora")) || 0,
@@ -471,6 +477,7 @@ async function editarTarifaMontajeForm(formData: FormData) {
 }
 
 async function eliminarTarifaMontajeForm(formData: FormData) {
+  await requirePanelAccess();
   const id = Number(formData.get("id"));
   await eliminarTarifaMontaje(id);
   redirect("/panel/tarifas");

@@ -7,6 +7,7 @@ import {
   actualizarParametroGlobal,
   eliminarParametroGlobal,
 } from "@/lib/panel/parametros";
+import { requirePanelAccess } from "@/lib/auth/server";
 import type {
   ParametroGlobalInsert,
   ParametroGlobalUpdate,
@@ -163,6 +164,7 @@ export default async function ParametrosPage() {
 }
 
 async function crearParametroForm(formData: FormData) {
+  await requirePanelAccess();
   const valorRaw = formData.get("valor") as string;
   let valor: number | boolean | string = Number(valorRaw);
   if (Number.isNaN(valor)) {
@@ -180,6 +182,7 @@ async function crearParametroForm(formData: FormData) {
 }
 
 async function editarParametroForm(formData: FormData) {
+  await requirePanelAccess();
   const clave = formData.get("clave") as string;
   const valorRaw = formData.get("valor") as string;
   let valor: number | boolean | string = Number(valorRaw);
@@ -197,6 +200,7 @@ async function editarParametroForm(formData: FormData) {
 }
 
 async function eliminarParametroForm(formData: FormData) {
+  await requirePanelAccess();
   const clave = formData.get("clave") as string;
   await eliminarParametroGlobal(clave);
   redirect("/panel/parametros");
