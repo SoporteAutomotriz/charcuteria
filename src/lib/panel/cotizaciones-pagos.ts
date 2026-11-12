@@ -12,8 +12,6 @@ import { requirePanelAccess } from "@/lib/auth/server";
  * Guarda en bitacora_auditoria el registro del pago.
  */
 export async function registrarPago(formData: FormData) {
-  await requirePanelAccess();
-
   const session = await requirePanelAccess();
 
   const cotizacionId = Number(formData.get("cotizacion_id"));
@@ -66,50 +64,16 @@ export async function registrarPago(formData: FormData) {
   }
 
   // 3. Si es anticipo y se verifica, cambiar estado a confirmada (reserva la fecha)
+  // La confirmación es atómica: verifica choque de fecha y actualiza el estado
+  // en una sola transacción de base de datos, evitando race conditions.
   if (esAnticipo && verificar) {
-    // Verificar que no haya un evento confirmado que choque en la misma fecha
-    const eventoFecha =
-      cotizacion.datos_evento &&
-      typeof cotizacion.datos_evento === "object" &&
-      "fecha" in cotizacion.datos_evento
-        ? (cotizacion.datos_evento as { fecha?: string }).fecha
-        : null;
+    const { error: rpcError } = await supabase.rpc(
+      "confirmar_cotizacion_atomica",
+      { cotizacion_id: cotizacionId },
+    );
 
-    if (eventoFecha) {
-      const { data: cotizacionesMismaFecha } = await supabase
-        .from("cotizaciones")
-        .select("id, folio, estado, datos_evento")
-        .eq("estado", "confirmada");
-
-      if (cotizacionesMismaFecha) {
-        const choque = cotizacionesMismaFecha.find((c) => {
-          const f =
-            c.datos_evento &&
-            typeof c.datos_evento === "object" &&
-            "fecha" in c.datos_evento
-              ? (c.datos_evento as { fecha?: string }).fecha
-              : null;
-          return f === eventoFecha && c.id !== cotizacionId;
-        });
-
-        if (choque) {
-          throw new Error(
-            `Ya existe un evento confirmado para la fecha ${eventoFecha} (cotización ${choque.folio})`,
-          );
-        }
-      }
-    }
-
-    const { error: estadoError } = await supabase
-      .from("cotizaciones")
-      .update({
-        estado: "confirmada",
-        actualizado_en: new Date().toISOString(),
-      })
-      .eq("id", cotizacionId);
-
-    if (estadoError) {
-      throw new Error(`Error al confirmar cotización: ${estadoError.message}`);
+    if (rpcError) {
+      throw new Error(`Error al confirmar cotización: ${rpcError.message}`);
     }
   }
 
