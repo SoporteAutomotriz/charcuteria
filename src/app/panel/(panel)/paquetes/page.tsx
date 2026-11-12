@@ -3,15 +3,16 @@
 import { redirect } from "next/navigation";
 import {
   listarPaquetes,
-  crearPaquete,
-  actualizarPaquete,
   obtenerPaquete,
-  eliminarPaquete,
   crearComponente,
   type Paquete,
-  type PaqueteInsert,
 } from "@/lib/panel/paquetes";
+import {
+  crearPaqueteForm,
+  eliminarPaqueteForm,
+} from "@/lib/panel/paquetes-forms";
 import { requirePanelAccess } from "@/lib/auth/server";
+import { FotoInput } from "@/components/foto-input";
 
 export default async function PaquetesPage() {
   const paquetes = await listarPaquetes();
@@ -27,8 +28,14 @@ export default async function PaquetesPage() {
         </p>
       </div>
 
-      <form action={crearPaqueteForm} className="space-y-4 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-zinc-900 mb-4">Nuevo paquete</h2>
+      {/* Formulario de creación con FotoInput */}
+      <form
+        action={crearPaqueteForm}
+        className="space-y-4 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm"
+      >
+        <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+          Nuevo paquete
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="col-span-full sm:col-span-2">
             <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -62,7 +69,13 @@ export default async function PaquetesPage() {
               className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
-          <div>
+          <div className="col-span-full">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Fotografía
+            </label>
+            <FotoInput name="foto" />
+          </div>
+          <div className="flex items-end">
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-medium"
@@ -103,13 +116,12 @@ async function PaqueteCard({
           </p>
         </div>
         <div className="flex gap-2">
-          <button
-            formAction={editarPaqueteForm}
-            form={`paquete-${paquete.id}`}
+          <a
+            href={`/panel/paquetes/${paquete.id}/editar`}
             className="text-sm text-blue-600 hover:underline mr-2"
           >
             Editar
-          </button>
+          </a>
           <button
             formAction={eliminarPaqueteForm}
             form={`paquete-${paquete.id}`}
@@ -202,58 +214,11 @@ async function PaqueteCard({
         </div>
       </form>
 
-      <form action={editarPaqueteForm} className="hidden" id={`paquete-${paquete.id}`}>
-        <input name="id" />
-        <input name="nombre" />
-        <input name="descripcion" />
-        <input name="personas_recomendadas" />
-        <input name="foto_url" />
-      </form>
-
       <form action={eliminarPaqueteForm} className="hidden" id={`eliminar-${paquete.id}`}>
         <input name="id" />
       </form>
     </div>
   );
-}
-
-async function crearPaqueteForm(formData: FormData) {
-  'use server';
-  await requirePanelAccess();
-  const paquete: PaqueteInsert = {
-    nombre: formData.get("nombre") as string,
-    descripcion: (formData.get("descripcion") as string) || null,
-    foto_url: (formData.get("foto_url") as string) || null,
-    personas_recomendadas:
-      Number(formData.get("personas_recomendadas")) || 1,
-  };
-
-  await crearPaquete(paquete);
-  redirect("/panel/paquetes");
-}
-
-async function editarPaqueteForm(formData: FormData) {
-  'use server';
-  await requirePanelAccess();
-  const id = Number(formData.get("id"));
-  const cambios = {
-    nombre: formData.get("nombre") as string,
-    descripcion: (formData.get("descripcion") as string) || null,
-    foto_url: (formData.get("foto_url") as string) || null,
-    personas_recomendadas:
-      Number(formData.get("personas_recomendadas")) || 1,
-  };
-
-  await actualizarPaquete(id, cambios);
-  redirect("/panel/paquetes");
-}
-
-async function eliminarPaqueteForm(formData: FormData) {
-  'use server';
-  await requirePanelAccess();
-  const id = Number(formData.get("id"));
-  await eliminarPaquete(id);
-  redirect("/panel/paquetes");
 }
 
 async function agregarComponenteForm(formData: FormData) {
