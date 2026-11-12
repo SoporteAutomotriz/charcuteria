@@ -1,3 +1,4 @@
+import Big from "big.js";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { requirePanelAccess } from "@/lib/auth/server";
@@ -62,8 +63,13 @@ export async function aplicarDescuento(id: number, descuentoPct: number) {
     throw new Error("Cotización no encontrada");
   }
 
-  const totalVenta = Number(cotizacion.total_venta ?? 0);
-  const totalConDescuento = totalVenta * (1 - descuentoPct / 100);
+  if (descuentoPct < 0 || descuentoPct > 100) {
+    throw new Error("El descuento debe estar entre 0 y 100");
+  }
+
+  const totalVenta = new Big(cotizacion.total_venta ?? "0");
+  const descuentoFactor = new Big(1).minus(new Big(descuentoPct).div(100));
+  const totalConDescuento = totalVenta.times(descuentoFactor);
 
   const { error } = await supabase
     .from("cotizaciones")

@@ -1,5 +1,6 @@
 "use client";
 
+import Big from "big.js";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -88,11 +89,11 @@ export default function CotizacionDetalle({
   const datosProductos = cotizacion.datos_productos as JsonProductos | null;
   const datosPaquetes = cotizacion.datos_paquetes as JsonPaquetes | null;
 
-  const totalVenta = Number(cotizacion.total_venta ?? 0);
+  const totalVenta = new Big(cotizacion.total_venta ?? "0");
   const descuentoActual = cotizacion.descuento_pct ?? 0;
   const totalConDescuento =
     descuentoActual > 0
-      ? totalVenta * (1 - descuentoActual / 100)
+      ? totalVenta.times(new Big(1).minus(new Big(descuentoActual).div(100)))
       : totalVenta;
 
   const cambiarEstado = async (formData: FormData) => {
@@ -201,7 +202,7 @@ export default function CotizacionDetalle({
               Total de venta
             </p>
             <p className="text-sm text-zinc-900 font-medium">
-              ${totalVenta.toLocaleString("es-MX", {
+              ${Number(totalVenta.toFixed(2)).toLocaleString("es-MX", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -222,7 +223,7 @@ export default function CotizacionDetalle({
               Total con descuento
             </p>
             <p className="text-sm text-zinc-900 font-medium">
-              ${totalConDescuento.toLocaleString("es-MX", {
+              ${Number(totalConDescuento.toFixed(2)).toLocaleString("es-MX", {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
