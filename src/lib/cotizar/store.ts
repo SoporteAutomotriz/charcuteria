@@ -72,11 +72,23 @@ export function leerBorrador(): BorradorCotizacion {
   try {
     const raw = localStorage.getItem(BORRADOR_KEY);
     if (!raw) return borradorVacio();
-    return JSON.parse(raw) as BorradorCotizacion;
+    // Cachear el snapshot para que useSyncExternalStore reciba una referencia
+    // estable entre renders y no entre en bucle infinito (React #185).
+    if (raw === ultimoValorBorrador && ultimoSnapshotBorrador) {
+      return ultimoSnapshotBorrador;
+    }
+    const parsed = JSON.parse(raw) as BorradorCotizacion;
+    ultimoValorBorrador = raw;
+    ultimoSnapshotBorrador = parsed;
+    return parsed;
   } catch {
     return borradorVacio();
   }
 }
+
+/** Último valor crudo y snapshot parseado para mantener referencia estable. */
+let ultimoValorBorrador: string | null = null;
+let ultimoSnapshotBorrador: BorradorCotizacion | null = null;
 
 /** Suscribe al evento de cambio de borrador entre pestañas. */
 export function borradorSuscribir(callback: () => void): () => void {
@@ -99,6 +111,9 @@ export function useBorrador(): BorradorCotizacion {
 export function guardarBorrador(borrador: BorradorCotizacion): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(BORRADOR_KEY, JSON.stringify(borrador));
+  // Invalidar cache del snapshot para que la próxima lectura sea fresca.
+  ultimoValorBorrador = null;
+  ultimoSnapshotBorrador = null;
   window.dispatchEvent(new Event("borrador-cambiado"));
 }
 
@@ -106,5 +121,7 @@ export function guardarBorrador(borrador: BorradorCotizacion): void {
 export function limpiarBorrador(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(BORRADOR_KEY);
+  ultimoValorBorrador = null;
+  ultimoSnapshotBorrador = null;
   window.dispatchEvent(new Event("borrador-cambiado"));
 }
