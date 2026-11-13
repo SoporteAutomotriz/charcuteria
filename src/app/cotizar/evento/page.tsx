@@ -7,20 +7,31 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { leerBorrador, guardarBorrador, type DatosEvento } from "@/lib/cotizar/store";
+import {
+  useBorrador,
+  guardarBorrador,
+  type DatosEvento,
+} from "@/lib/cotizar/store";
 import { validarEvento } from "@/lib/cotizar/validaciones";
 
 export default function EventoPage() {
   const router = useRouter();
-  const borrador = leerBorrador();
+  // useSyncExternalStore lee localStorage de forma segura con hidratación:
+  // servidor renderiza vacío, cliente se sincroniza tras hidratación sin
+  // setState en efectos ni mismatch (React #441).
+  const borrador = useBorrador();
   const modalidad = borrador.modalidad;
   const eventoGuardado = borrador.evento;
 
   const [tipo, setTipo] = useState<string>(eventoGuardado?.tipo ?? "");
   const [fecha, setFecha] = useState<string>(eventoGuardado?.fecha ?? "");
   const [horario, setHorario] = useState<string>(eventoGuardado?.horario ?? "");
-  const [invitados, setInvitados] = useState<string>(String(eventoGuardado?.invitados ?? ""));
-  const [duracion, setDuracion] = useState<string>(String(eventoGuardado?.duracion ?? ""));
+  const [invitados, setInvitados] = useState<string>(
+    String(eventoGuardado?.invitados ?? ""),
+  );
+  const [duracion, setDuracion] = useState<string>(
+    String(eventoGuardado?.duracion ?? ""),
+  );
   const [errores, setErrores] = useState<string[]>([]);
   const [advertencias, setAdvertencias] = useState<string[]>([]);
 

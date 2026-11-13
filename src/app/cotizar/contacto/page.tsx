@@ -7,19 +7,28 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { leerBorrador, guardarBorrador } from "@/lib/cotizar/store";
-import type { DatosContacto } from "@/lib/cotizar/store";
+import {
+  useBorrador,
+  guardarBorrador,
+  type DatosContacto,
+} from "@/lib/cotizar/store";
 
 export default function ContactoPage() {
   const router = useRouter();
-  const borrador = leerBorrador();
+  // useSyncExternalStore lee localStorage de forma segura con hidratación:
+  // servidor renderiza vacío, cliente se sincroniza tras hidratación sin
+  // setState en efectos ni mismatch (React #441).
+  const borrador = useBorrador();
 
   const [nombre, setNombre] = useState<string>(borrador.contacto?.nombre ?? "");
-  const [telefono, setTelefono] = useState<string>(borrador.contacto?.telefono ?? "");
-  const [correo, setCorreo] = useState<string>(borrador.contacto?.correo ?? "");
-  const [canalPreferido, setCanalPreferido] = useState<DatosContacto["canalPreferido"]>(
-    borrador.contacto?.canalPreferido ?? "whatsapp",
+  const [telefono, setTelefono] = useState<string>(
+    borrador.contacto?.telefono ?? "",
   );
+  const [correo, setCorreo] = useState<string>(borrador.contacto?.correo ?? "");
+  const [canalPreferido, setCanalPreferido] =
+    useState<DatosContacto["canalPreferido"]>(
+      borrador.contacto?.canalPreferido ?? "whatsapp",
+    );
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState<boolean>(
     borrador.contacto?.aceptaPrivacidad ?? false,
   );
@@ -33,7 +42,7 @@ export default function ContactoPage() {
       aceptaPrivacidad,
     };
 
-    const borradorActual = leerBorrador();
+    const borradorActual = borrador;
     guardarBorrador({
       ...borradorActual,
       paso: 8,

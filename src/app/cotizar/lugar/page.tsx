@@ -7,8 +7,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { leerBorrador, guardarBorrador } from "@/lib/cotizar/store";
-import type { DatosLugar } from "@/lib/cotizar/store";
+import { useBorrador, guardarBorrador, type DatosLugar } from "@/lib/cotizar/store";
 
 interface MunicipioOpcion {
   nombre: string;
@@ -18,7 +17,10 @@ interface MunicipioOpcion {
 
 export default function LugarPage() {
   const router = useRouter();
-  const borrador = leerBorrador();
+  // useSyncExternalStore lee localStorage de forma segura con hidratación:
+  // servidor renderiza vacío, cliente se sincroniza tras hidratación sin
+  // setState en efectos ni mismatch (React #441).
+  const borrador = useBorrador();
   const lugarGuardado = borrador.lugar;
 
   const [direccion, setDireccion] = useState<string>(lugarGuardado?.direccion ?? "");
@@ -56,7 +58,7 @@ export default function LugarPage() {
       lugar.zonaTransporteId = zonaSeleccionada.zonaTransporteId;
     }
 
-    const borradorActual = leerBorrador();
+    const borradorActual = borrador;
     guardarBorrador({
       ...borradorActual,
       paso: 7,

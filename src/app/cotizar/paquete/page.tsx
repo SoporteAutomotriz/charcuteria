@@ -7,8 +7,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { leerBorrador, guardarBorrador } from "@/lib/cotizar/store";
-import type { PuntoPartida, BorradorCotizacion } from "@/lib/cotizar/store";
+import {
+  useBorrador,
+  guardarBorrador,
+  type BorradorCotizacion,
+  type PuntoPartida,
+} from "@/lib/cotizar/store";
 
 interface PaqueteOpcion {
   id: number;
@@ -18,7 +22,10 @@ interface PaqueteOpcion {
 
 export default function PaquetePage() {
   const router = useRouter();
-  const borrador = leerBorrador();
+  // useSyncExternalStore lee localStorage de forma segura con hidratación:
+  // servidor renderiza vacío, cliente se sincroniza tras hidratación sin
+  // setState en efectos ni mismatch (React #441).
+  const borrador = useBorrador();
   const [paquetes, setPaquetes] = useState<PaqueteOpcion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,12 +54,11 @@ export default function PaquetePage() {
 
   const continuar = () => {
     if (!puntoPartida) return;
-    const borradorActual = leerBorrador();
-    const cambios: BorradorCotizacion = {
-      ...borradorActual,
+    const cambios = {
+      ...borrador,
       paso: 4,
       puntoPartida,
-    };
+    } as BorradorCotizacion;
     if (puntoPartida === "paquete") {
       cambios.paqueteId = paqueteId ?? undefined;
     } else {

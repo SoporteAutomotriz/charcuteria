@@ -13,7 +13,7 @@ import {
   obtenerPreciosVenta,
   calcularSubtotalVenta,
 } from "@/lib/cotizar/estimado";
-import { leerBorrador } from "@/lib/cotizar/store";
+import { useBorrador } from "@/lib/cotizar/store";
 import type { ProductoSeleccionado } from "@/lib/cotizar/store";
 import type { PrecioVentaProducto } from "@/lib/cotizar/estimado";
 import { useState, useEffect } from "react";
@@ -25,14 +25,10 @@ export default function CarritoFijo() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Leer el borrador solo en el cliente. Durante la hidratación inicial el
-  // servidor renderiza con productos vacíos (localStorage no existe en el
-  // servidor) y el cliente puede tener datos guardados, lo que causaría un
-  // mismatch de hidratación (React #441). Se usa suppressHydrationWarning en
-  // el contenedor para silenciar ese差异 y los datos del cliente se reflejan
-  // tras la hidratación.
-  const productos: ProductoSeleccionado[] =
-    typeof window !== "undefined" ? (leerBorrador().productos ?? []) : [];
+  // useSyncExternalStore lee localStorage de forma segura con hidratación:
+  // servidor renderiza vacío, cliente se sincroniza tras hidratación sin
+  // setState en efectos ni mismatch (React #441).
+  const productos: ProductoSeleccionado[] = useBorrador().productos ?? [];
 
   useEffect(() => {
     let montado = true;
@@ -79,10 +75,7 @@ export default function CarritoFijo() {
   }
 
   return (
-    <div
-      suppressHydrationWarning
-      className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm sticky top-4"
-    >
+    <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm sticky top-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-semibold text-zinc-900">
           Estimado preliminar

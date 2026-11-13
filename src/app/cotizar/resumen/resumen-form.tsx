@@ -9,7 +9,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { leerBorrador, limpiarBorrador, borradorVacio } from "@/lib/cotizar/store";
+import { useBorrador, limpiarBorrador } from "@/lib/cotizar/store";
 import { validarBorradorCompleto, borradorEsValido } from "@/lib/cotizar/validaciones";
 import { enviarSolicitud, generarIdempotencyCookie } from "@/app/cotizar/action";
 
@@ -21,11 +21,10 @@ export default function ResumenForm({
   idempotencyKey,
 }: ResumenFormProps) {
   const router = useRouter();
-  // Leer el borrador solo en el cliente para evitar mismatch de hidratación
-  // (React #441): en el servidor localStorage no existe y devuelve vacío, en el
-  // cliente puede tener datos guardados. La diferencia inicial se silencia con
-  // suppressHydrationWarning y se resuelve tras la hidratación.
-  const borrador = typeof window !== "undefined" ? leerBorrador() : borradorVacio();
+  // useSyncExternalStore lee localStorage de forma segura con hidratación:
+  // servidor renderiza vacío, cliente se sincroniza tras hidratación sin
+  // setState en efectos ni mismatch (React #441).
+  const borrador = useBorrador();
   const [errorEnvio, setErrorEnvio] = useState<string | null>(null);
   const [enviado, setEnviado] = useState<boolean>(false);
   const [enviando, setEnviando] = useState<boolean>(false);
@@ -92,10 +91,7 @@ export default function ResumenForm({
   }
 
   return (
-    <div
-      suppressHydrationWarning
-      className="min-h-screen bg-zinc-50 font-sans py-8 px-4 sm:px-6 lg:px-8"
-    >
+    <div className="min-h-screen bg-zinc-50 font-sans py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
         <nav className="mb-6">
           <Link

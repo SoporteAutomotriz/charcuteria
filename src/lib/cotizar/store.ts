@@ -10,6 +10,8 @@
  * productos/zonas y datos de contacto del cliente.
  */
 
+import { useSyncExternalStore } from "react";
+
 export const BORRADOR_KEY = "charcuteria_borrador_cotizacion";
 
 export type Modalidad = "tabla" | "mesa";
@@ -74,6 +76,23 @@ export function leerBorrador(): BorradorCotizacion {
   } catch {
     return borradorVacio();
   }
+}
+
+/** Suscribe al evento de cambio de borrador entre pestañas. */
+export function borradorSuscribir(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("borrador-cambiado", callback);
+  return () => window.removeEventListener("borrador-cambiado", callback);
+}
+
+/**
+ * Hook para leer el borrador de forma segura con hidratación.
+ * Usa useSyncExternalStore para leer localStorage sin causar mismatch de
+ * hidratación (React #441): el servidor renderiza vacío y el cliente se
+ * sincroniza tras la hidratación sin setState en efectos.
+ */
+export function useBorrador(): BorradorCotizacion {
+  return useSyncExternalStore(borradorSuscribir, leerBorrador, borradorVacio);
 }
 
 /** Guarda el borrador en localStorage y dispara evento para sincronizar pestañas. */

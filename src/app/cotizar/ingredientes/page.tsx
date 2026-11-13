@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { leerBorrador, guardarBorrador, type ProductoSeleccionado, type BorradorCotizacion } from "@/lib/cotizar/store";
+import { useBorrador, guardarBorrador, type ProductoSeleccionado } from "@/lib/cotizar/store";
 import CarritoFijo from "@/components/carrito-fijo";
 
 interface ProductoOpcion {
@@ -26,7 +26,10 @@ interface CategoriaOpcion {
 
 export default function IngredientesPage() {
   const router = useRouter();
-  const borrador = leerBorrador();
+  // useSyncExternalStore lee localStorage de forma segura con hidratación:
+  // servidor renderiza vacío, cliente se sincroniza tras hidratación sin
+  // setState en efectos ni mismatch (React #441).
+  const borrador = useBorrador();
   const [productos, setProductos] = useState<ProductoOpcion[]>([]);
   const [categorias, setCategorias] = useState<CategoriaOpcion[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -86,9 +89,8 @@ export default function IngredientesPage() {
   };
 
   const guardarYAvanzar = () => {
-    const borradorActual = leerBorrador();
-    const cambios: BorradorCotizacion = {
-      ...borradorActual,
+    const cambios = {
+      ...borrador,
       paso: 5,
       productos: carrito,
     };
