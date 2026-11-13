@@ -18,14 +18,21 @@ import type { ProductoSeleccionado } from "@/lib/cotizar/store";
 import type { PrecioVentaProducto } from "@/lib/cotizar/estimado";
 import { useState, useEffect } from "react";
 
-interface CarritoFijoProps {
-  onProductoChange: (productos: ProductoSeleccionado[]) => void;
-}
-
-export default function CarritoFijo(_props: CarritoFijoProps) {
-  const [precios, setPrecios] = useState<Record<number, PrecioVentaProducto>>({});
+export default function CarritoFijo() {
+  const [precios, setPrecios] = useState<Record<number, PrecioVentaProducto>>(
+    {},
+  );
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Leer el borrador solo en el cliente. Durante la hidratación inicial el
+  // servidor renderiza con productos vacíos (localStorage no existe en el
+  // servidor) y el cliente puede tener datos guardados, lo que causaría un
+  // mismatch de hidratación (React #441). Se usa suppressHydrationWarning en
+  // el contenedor para silenciar ese差异 y los datos del cliente se reflejan
+  // tras la hidratación.
+  const productos: ProductoSeleccionado[] =
+    typeof window !== "undefined" ? (leerBorrador().productos ?? []) : [];
 
   useEffect(() => {
     let montado = true;
@@ -53,8 +60,6 @@ export default function CarritoFijo(_props: CarritoFijoProps) {
     };
   }, []);
 
-  const borrador = leerBorrador();
-  const productos: ProductoSeleccionado[] = borrador.productos ?? [];
   const subtotal = calcularSubtotalVenta(precios, productos);
 
   if (cargando) {
@@ -74,9 +79,14 @@ export default function CarritoFijo(_props: CarritoFijoProps) {
   }
 
   return (
-    <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm sticky top-4">
+    <div
+      suppressHydrationWarning
+      className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm sticky top-4"
+    >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold text-zinc-900">Estimado preliminar</span>
+        <span className="text-sm font-semibold text-zinc-900">
+          Estimado preliminar
+        </span>
         <span className="text-xs text-zinc-500">sujeto a revisión</span>
       </div>
       <div className="text-lg font-bold text-zinc-900">

@@ -207,7 +207,7 @@ export default function IngredientesPage() {
           </div>
 
           <div className="p-4 border-t border-zinc-200">
-            <CarritoFijo onProductoChange={setCarrito} />
+            <CarritoFijo />
           </div>
 
           <div className="p-4 border-t border-zinc-200 flex justify-end gap-2">

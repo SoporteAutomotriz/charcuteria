@@ -9,6 +9,8 @@
 import { generarIdempotencyKey } from "@/lib/cotizar/idempotency";
 import ResumenForm from "./resumen-form";
 
+export const dynamic = "force-dynamic";
+
 export default async function ResumenPage() {
   const idempotencyKey = generarIdempotencyKey();
 
