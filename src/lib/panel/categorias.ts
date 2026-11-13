@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { requirePanelAccess } from "@/lib/auth/server";
 import type { Database } from "@/types/database";
 
 export type Categoria =
@@ -31,6 +32,7 @@ export async function listarCategorias(): Promise<Categoria[]> {
 export async function crearCategoria(
   categoria: CategoriaInsert,
 ): Promise<Categoria> {
+  await requirePanelAccess();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categorias")
@@ -52,6 +54,7 @@ export async function actualizarCategoria(
   id: number,
   cambios: CategoriaUpdate,
 ): Promise<Categoria> {
+  await requirePanelAccess();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("categorias")
@@ -73,6 +76,7 @@ export async function actualizarCategoria(
  * gestionar esa dependencia antes de borrar.
  */
 export async function eliminarCategoria(id: number): Promise<void> {
+  await requirePanelAccess();
   const supabase = await createClient();
   const { error } = await supabase
     .from("categorias")
