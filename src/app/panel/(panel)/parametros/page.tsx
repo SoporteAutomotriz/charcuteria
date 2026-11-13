@@ -124,6 +124,34 @@ export default async function ParametrosPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Margen global (%)
+              </label>
+              <input
+                name="margen_global_pct"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                defaultValue="30"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Tasa de IVA (%)
+              </label>
+              <input
+                name="iva_pct"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                defaultValue="16"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
                 Anticipo (%)
               </label>
               <input
@@ -306,6 +334,8 @@ async function crearParametroForm(formData: FormData) {
 
   // Formulario de parámetros predefinidos: guarda cada clave por separado.
   const predefinidos: Array<{ clave: string; valor: string }> = [
+    { clave: "margen_global_pct", valor: formData.get("margen_global_pct") as string },
+    { clave: "iva_pct", valor: formData.get("iva_pct") as string },
     { clave: "anticipo_pct", valor: formData.get("anticipo_pct") as string },
     {
       clave: "vigencia_cotizacion_dias",
