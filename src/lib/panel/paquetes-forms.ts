@@ -138,7 +138,7 @@ export async function eliminarComponenteForm(formData: FormData) {
   await requirePanelAccess();
   const id = Number(formData.get("id"));
   await eliminarComponente(id);
-  redirect(`/panel/paquetes/${Number(formData.get("paquete_id"))}`);
+  redirect(`/panel/paquetes/${Number(formData.get("paquete_id"))}/editar`);
 }
 
 /**
