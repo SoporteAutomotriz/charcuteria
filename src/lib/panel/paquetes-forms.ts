@@ -24,7 +24,14 @@ export async function crearPaqueteForm(formData: FormData) {
   'use server';
   await requirePanelAccess();
 
-  const archivo = formData.get("foto") as File | null;
+  const archivoRaw = formData.get("foto");
+  // Solo procesar la foto si es un File real, con nombre y con contenido.
+  // Un input de archivo sin selección puede enviar un File vacío que
+  // subirFotoProducto rechazaría como tipo no permitido.
+  const archivo =
+    archivoRaw instanceof File && archivoRaw.name && archivoRaw.size > 0
+      ? (archivoRaw as File)
+      : null;
   let fotoUrl: string | null = null;
   let nombreArchivoTemporal: string | null = null;
 
