@@ -86,6 +86,22 @@ export async function desactivarProducto(id: number): Promise<void> {
 }
 
 /**
+ * Elimina físicamente un producto del catálogo.
+ * Solo debe usarse cuando no hay cotizaciones ni dependencias asociadas.
+ */
+export async function eliminarProducto(id: number): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("productos")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    throw new Error(`Error al eliminar producto: ${error.message}`);
+  }
+}
+
+/**
  * Upsert del costo de compra de un producto.
  * producto_id tiene restricción UNIQUE, por lo que actualiza si ya existe.
  */

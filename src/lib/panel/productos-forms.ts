@@ -16,6 +16,7 @@ import {
   crearProducto,
   actualizarProducto,
   desactivarProducto,
+  eliminarProducto,
   listarCategorias,
   upsertProductoCosto,
   upsertProductoMargen,
@@ -274,6 +275,24 @@ export async function editarProductoForm(formData: FormData) {
     const mensaje =
       error instanceof Error ? error.message : String(error);
     throw new Error(`Error al editar el producto: ${mensaje}`);
+  }
+
+  redirect("/panel/productos");
+}
+
+/**
+ * Form handler para eliminar un producto físicamente del catálogo.
+ */
+export async function eliminarProductoForm(formData: FormData) {
+  'use server';
+  await requirePanelAccess();
+  const id = Number(formData.get("id"));
+  try {
+    await eliminarProducto(id);
+  } catch (error) {
+    const mensaje =
+      error instanceof Error ? error.message : String(error);
+    throw new Error(`Error al eliminar el producto: ${mensaje}`);
   }
 
   redirect("/panel/productos");

@@ -4,6 +4,7 @@ import { getPanelSession } from "@/lib/auth/server";
 import {
   crearProductoForm,
   desactivarProductoForm,
+  eliminarProductoForm,
   listarProductosConCategorias,
   listarCategoriasParaForm,
 } from "@/lib/panel/productos-forms";
@@ -276,10 +277,28 @@ export default async function ProductosPage() {
                   <button
                     formAction={desactivarProductoForm}
                     form={`desactivar-producto-${p.id}`}
-                    className="text-sm text-red-600 hover:underline"
+                    className="text-sm text-red-600 hover:underline mr-2"
                   >
                     Desactivar
                   </button>
+                  {esPropietario && (
+                    <>
+                      <form
+                        action={eliminarProductoForm}
+                        id={`eliminar-producto-${p.id}`}
+                        className="hidden"
+                      >
+                        <input name="id" defaultValue={String(p.id)} />
+                      </form>
+                      <button
+                        formAction={eliminarProductoForm}
+                        form={`eliminar-producto-${p.id}`}
+                        className="text-sm text-red-700 hover:underline"
+                      >
+                        Eliminar
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

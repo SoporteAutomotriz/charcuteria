@@ -58,7 +58,6 @@ export default async function ProductoEditarPage({
 
         <form action={editarProductoForm} className="space-y-4">
           <input type="hidden" name="id" defaultValue={String(producto.id)} />
-          <input type="hidden" name="estado" defaultValue={producto.estado} />
           <input
             type="hidden"
             name="orden_visualizacion"
