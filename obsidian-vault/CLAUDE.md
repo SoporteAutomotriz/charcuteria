@@ -15,11 +15,11 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Corrección de React #441 (hidratación) y tokens inconsistentes en cotización pública (commit 307d0a3), comiteado en main.
+Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Idempotency key generada una sola vez al entrar al flujo de cotización (commit a30b82a), comiteado y pusheado en main.
 
 ### Working
 
-- `main` y `origin/main` sincronizadas (commit 7a607ad pusheado, corrección React #441 y tokens en cotización pública)
+- `main` y `origin/main` sincronizadas (commit a30b82a pusheado)
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
@@ -33,7 +33,11 @@ Update this section every time you return to this vault. **Last updated:** 13-11
 - Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 - Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
-- Cambios recientes (main, pusheados hasta 74ef46e; 307d0a3 comiteado localmente, pendiente de push):
+- Cambios recientes (main, pusheados hasta a30b82a):
+  - Commit a30b82a: fix idempotency key generada una sola vez al entrar al flujo de cotización — middleware.ts genera y guarda cookie httpOnly idempotency_key la primera vez que el cliente entra a /cotizar (sobrevive a recargas y navegaciones); resumen/page.tsx lee la clave existente del request en lugar de regenerarla; resumen-form.tsx ya no toca cookies. Corrige error "Clave de idempotencia inválida" en POST /cotizar/resumen.
+  - Commit 8b9d4b5: fix idempotency key desincronizada (cookie desde Server Component en ResumenPage). (Posteriormente reemplazado por a30b82a que mueve la generación al middleware para que sea una sola vez al entrar al flujo.)
+  - Commit dfa1cc6: fix React #185 bucle infinito en useSyncExternalStore del borrador — leerBorrador() cachea snapshot parseado para referencia estable entre renders; guardarBorrador() y limpiarBorrador() invalidan el cache.
+  - Commit c7c87a6: fix React #441 en todas las páginas del configurador (useSyncExternalStore vía useBorrador()).
   - Commit 307d0a3: fix React #441 (hidratación) y tokens inconsistentes en cotización pública — CarritoFijo lee borrador solo en cliente, ResumenForm lee borrador solo en cliente con suppressHydrationWarning, ResumenPage usa dynamic = "force-dynamic".
   - Commit 396afdb: `eliminarProducto()` en `src/lib/panel/productos.ts`; `eliminarProductoForm()` en `src/lib/panel/productos-forms.ts`; botón "Eliminar" (solo propietario) en `src/app/panel/(panel)/productos/page.tsx`; corregido cambio de estado al editar en `src/app/panel/(panel)/productos/[id]/editar/page.tsx` (eliminado input oculto duplicado `name="estado"`).
   - Commit 37cf5c5: agregados `margen_global_pct` e `iva_pct` al formulario de parámetros predefinidos en `/panel/parametros` (editable solo por propietario).
@@ -44,8 +48,8 @@ Update this section every time you return to this vault. **Last updated:** 13-11
   - Commit 1d2843c: agregar eliminar componentes individuales de un paquete — `eliminarComponenteForm` en `paquetes-forms.ts`; lista de componentes con botón Eliminar en `PaqueteEditarPage`.
   - Commit 05c23b6: corregido error al editar paquete (invalid input syntax for type bigint: "NaN") — `await params` en `PaqueteEditarPage` (Next.js 15, params es Promise).
   - Commit 8b0ddc7: corregido redirect tras eliminar componente de paquete — ahora vuelve a `/panel/paquetes/[id]/editar` en lugar del listado general.
-  - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar.
-  - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente.
+  - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar. (Posteriormente reemplazado por middleware que establece la cookie una sola vez al entrar al flujo, commits 8b9d4b5 y a30b82a.)
+  - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente. (Posteriormente reemplazado por commits 8b9d4b5 y a30b82a.)
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ### Entregables fase fotos (comiteados, sin push)
@@ -59,13 +63,37 @@ Commits en rama fase-fotos-productos-paquetes:
 - 03b316c — feat: parámetros extendidos (anticipo, vigencia, holgura, modo IVA)
 - 5df0860 — test: admin puede crear/editar producto sin costo ni margen
 
-### Broken / Blocked
+### Working
 
-- (ninguno)
-
-### Focus right now
-
-- Pedir confirmación al dueño antes de pushear rama fase-fotos-productos-paquetes (regla CLAUDE.md #6: no push sin confirmación).
+- `main` y `origin/main` sincronizadas (commit c7c87a6 pusheado, React #441 corregido en todas las 8 páginas del configurador con useSyncExternalStore vía useBorrador())
+- Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
+- `npm run typecheck` en verde (tsc --noEmit sin errores)
+- `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
+- `npm run test` en verde (Vitest: 118 pruebas pasando — incluye store, validaciones, estimado, action, cotizacion-publica, RLS estáticas; rls-integration falla solo por falta de env vars de Supabase, problema preexistente)
+- `npm run dev` funcionando en http://localhost:3000
+- `npm run build` exitoso (producción)
+- Despliegue en Vercel: https://charcuteria-iota.vercel.app (Fase 1 cerrada)
+- Fase 2 completa: migraciones 01-06 escritas, comiteadas y pusheadas en rama fase-2-base-datos-roles-rls
+- Fase 3 completa: motor de precios determinista cerrado, comiteado y pusheado (commits ec7fe91 y c54bc0c)
+- Fase 4 completa: panel del propietario para catálogo (productos, paquetes con componentes, zonas de transporte, tarifas de montaje, parámetros globales) — Server Actions de mutación protegidas con requirePanelAccess (rol propietario/administrador)
+- Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
+- Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
+- Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
+- Cambios recientes (main, pusheados hasta c7c87a6):
+  - Commit c7c87a6: fix React #441 (hidratación) en todas las páginas del configurador — useSyncExternalStore vía useBorrador() en carrito-fijo, resumen-form, evento, paquete, servicios, lugar, ingredientes y contacto; eliminación de leerBorrador() sin importar y de useEffect/useState sin usar
+  - Commit 307d0a3: fix React #441 (hidratación) y tokens inconsistentes en cotización pública — CarritoFijo lee borrador solo en cliente, ResumenForm lee borrador solo en cliente con suppressHydrationWarning, ResumenPage usa dynamic = "force-dynamic".
+  - Commit 396afdb: `eliminarProducto()` en `src/lib/panel/productos.ts`; `eliminarProductoForm()` en `src/lib/panel/productos-forms.ts`; botón "Eliminar" (solo propietario) en `src/app/panel/(panel)/productos/page.tsx`; corregido cambio de estado al editar en `src/app/panel/(panel)/productos/[id]/editar/page.tsx` (eliminado input oculto duplicado `name="estado"`).
+  - Commit 37cf5c5: agregados `margen_global_pct` e `iva_pct` al formulario de parámetros predefinidos en `/panel/parametros` (editable solo por propietario).
+  - Commit b585ede: restaurado CRUD completo de `/panel/categorias` accesible para ambos roles (propietario y administrador) vía `requirePanelAccess`; agregado al menú de navegación del panel.
+  - Commit 78d65fa: corregido error al crear producto sin foto — en `crearProductoForm` se valida que el archivo sea un File real con nombre y `size > 0` antes de procesarlo.
+  - Commit 4b6c9ae: corregido recuento de indicadores en `/panel` — las consultas de conteo usan `select('*', { head: true, count: 'exact' })`.
+  - Commit e6564c1: corregido error al crear paquete sin foto — misma validación en `crearPaqueteForm`.
+  - Commit 1d2843c: agregar eliminar componentes individuales de un paquete — `eliminarComponenteForm` en `paquetes-forms.ts`; lista de componentes con botón Eliminar en `PaqueteEditarPage`.
+  - Commit 05c23b6: corregido error al editar paquete (invalid input syntax for type bigint: "NaN") — `await params` en `PaqueteEditarPage` (Next.js 15, params es Promise).
+  - Commit 8b0ddc7: corregido redirect tras eliminar componente de paquete — ahora vuelve a `/panel/paquetes/[id]/editar` en lugar del listado general.
+  - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar.
+  - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente.
+  - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ## Key Decisions Made
 
