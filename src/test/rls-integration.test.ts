@@ -230,6 +230,107 @@ it("Administrador no puede leer paquete_margenes (tabla privada, solo propietari
 });
 });
 
+describe("RLS con usuario real — Administrador puede crear/editar producto sin costo ni margen", () => {
+  let adminToken: string | null = null;
+
+  beforeAll(async () => {
+    if (!supabaseAnon) {
+      supabaseAnon = crearCliente();
+    }
+  });
+
+  beforeEach(async () => {
+    const signIn = await supabaseAnon.auth.signInWithPassword(USUARIO_ADMIN);
+
+    if (signIn.error || !signIn.data.session) {
+      throw new Error(
+        `No se pudo autenticar usuario admin: ${signIn.error?.message ?? "sin sesión"}. ` +
+          "¿Corriste antes 'npx tsx scripts/crear-usuarios-prueba.ts'?",
+      );
+    }
+
+    adminToken = signIn.data.session.access_token;
+  });
+
+  afterAll(async () => {
+    if (adminToken) {
+      await crearCliente(adminToken).auth.signOut();
+    }
+  });
+
+  it("Administrador crea un producto sin costo ni margen: éxito y sin filas en tablas privadas", async () => {
+    if (!adminToken) throw new Error("No hay token de administrador");
+    const supabaseAdmin = crearCliente(adminToken);
+
+    const { data: categorias } = await supabaseAdmin
+      .from("categorias")
+      .select("id")
+      .limit(1);
+    const categoria_id = categorias?.[0]?.id ?? null;
+
+    const { data: producto, error } = await supabaseAdmin
+      .from("productos")
+      .insert({
+        nombre: "Producto prueba admin sin costo",
+        descripcion: "Producto de prueba creado por administrador",
+        categoria_id,
+        orden_visualizacion: 0,
+        unidad_compra: "kg",
+        unidad_venta: "rebanada",
+        factor_conversion: 1,
+        merma_pct: 0,
+        estado: "activo",
+      })
+      .select()
+      .single();
+
+    expect(error).toBeNull();
+    expect(producto).not.toBeNull();
+    expect(producto.id).toBeDefined();
+
+    // Verificar que NO hay filas en producto_costos ni producto_margenes para este producto
+    const { data: costos, error: errCostos } = await supabaseAdmin
+      .from("producto_costos")
+      .select("*")
+      .eq("producto_id", producto.id);
+    expect(errCostos).toBeNull();
+    expect(costos).toEqual([]);
+
+    const { data: margenes, error: errMargenes } = await supabaseAdmin
+      .from("producto_margenes")
+      .select("*")
+      .eq("producto_id", producto.id);
+    expect(errMargenes).toBeNull();
+    expect(margenes).toEqual([]);
+
+    // Editar el producto (sin costo ni margen)
+    const { error: errUpdate } = await supabaseAdmin
+      .from("productos")
+      .update({
+        descripcion: "Producto editado por administrador",
+        estado: "agotado_temporal",
+      })
+      .eq("id", producto.id);
+    expect(errUpdate).toBeNull();
+
+    // Verificar que sigue sin haber filas en tablas privadas tras editar
+    const { data: costos2 } = await supabaseAdmin
+      .from("producto_costos")
+      .select("*")
+      .eq("producto_id", producto.id);
+    expect(costos2).toEqual([]);
+
+    const { data: margenes2 } = await supabaseAdmin
+      .from("producto_margenes")
+      .select("*")
+      .eq("producto_id", producto.id);
+    expect(margenes2).toEqual([]);
+
+    // Limpieza: eliminar el producto de prueba
+    await supabaseAdmin.from("productos").delete().eq("id", producto.id);
+  });
+});
+
 describe("RLS con usuario real — rol Propietario SÍ puede leer costos", () => {
   let propietarioToken: string | null = null;
 

@@ -85,6 +85,96 @@ export async function desactivarProducto(id: number): Promise<void> {
   }
 }
 
+/**
+ * Upsert del costo de compra de un producto.
+ * producto_id tiene restricción UNIQUE, por lo que actualiza si ya existe.
+ */
+export async function upsertProductoCosto(
+  producto_id: number,
+  costo_unitario_compra: number,
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("producto_costos")
+    .upsert(
+      { producto_id, costo_unitario_compra },
+      { onConflict: "producto_id" },
+    );
+
+  if (error) {
+    throw new Error(`Error al guardar el costo del producto: ${error.message}`);
+  }
+}
+
+/**
+ * Upsert del margen propio y precio fijo manual de un producto.
+ * producto_id tiene restricción UNIQUE, por lo que actualiza si ya existe.
+ */
+export async function upsertProductoMargen(
+  producto_id: number,
+  margen_propio_pct: number,
+  precio_fijo_manual: number | null,
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("producto_margenes")
+    .upsert(
+      { producto_id, margen_propio_pct, precio_fijo_manual },
+      { onConflict: "producto_id" },
+    );
+
+  if (error) {
+    throw new Error(
+      `Error al guardar el margen del producto: ${error.message}`,
+    );
+  }
+}
+
+/**
+ * Obtiene el costo de compra de un producto (solo propietario por RLS).
+ */
+export async function obtenerProductoCosto(
+  producto_id: number,
+): Promise<{ costo_unitario_compra: number } | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("producto_costos")
+    .select("costo_unitario_compra")
+    .eq("producto_id", producto_id)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(`Error al obtener el costo del producto: ${error.message}`);
+  }
+
+  return data;
+}
+
+/**
+ * Obtiene el margen propio y precio fijo manual de un producto (solo propietario por RLS).
+ */
+export async function obtenerProductoMargen(
+  producto_id: number,
+): Promise<{
+  margen_propio_pct: number;
+  precio_fijo_manual: number | null;
+} | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("producto_margenes")
+    .select("margen_propio_pct, precio_fijo_manual")
+    .eq("producto_id", producto_id)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw new Error(`Error al obtener el margen del producto: ${error.message}`);
+  }
+
+  return data;
+}
+
 export async function listarCategorias(): Promise<
   Database["public"]["Tables"]["categorias"]["Row"][]
 > {

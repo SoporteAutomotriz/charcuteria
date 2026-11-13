@@ -5,9 +5,11 @@ import { redirect } from "next/navigation";
 import { getPanelSession, requirePanelAccess } from "@/lib/auth/server";
 import {
   listarParametrosGlobales,
+  obtenerParametroGlobal,
   crearParametroGlobal,
   actualizarParametroGlobal,
   eliminarParametroGlobal,
+  IVA_MODO_OPCIONES,
 } from "@/lib/panel/parametros";
 import type {
   ParametroGlobalInsert,
@@ -107,6 +109,86 @@ export default async function ParametrosPage() {
         </form>
       )}
 
+      {/* Parámetros predefinidos de la sección 2 */}
+      <div className="bg-white p-6 rounded-lg border border-zinc-200 shadow-sm">
+        <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+          Parámetros predefinidos
+        </h2>
+        <p className="text-zinc-600 text-sm mb-4">
+          Valores que usa el motor de precios y la presentación de cotizaciones.
+        </p>
+        <form
+          action={crearParametroForm}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Anticipo (%)
+              </label>
+              <input
+                name="anticipo_pct"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                defaultValue="50"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Vigencia de cotización (días)
+              </label>
+              <input
+                name="vigencia_cotizacion_dias"
+                type="number"
+                min="0"
+                defaultValue="5"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Holgura del estimado (%)
+              </label>
+              <input
+                name="holgura_estimado_pct"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                defaultValue="10"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Modo de IVA
+              </label>
+              <select
+                name="iva_modo"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+                {IVA_MODO_OPCIONES.map((o) => (
+                  <option key={o} value={o}>
+                    {o === "incluido" ? "Incluido en el precio" : "Desglosado"}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-medium"
+              >
+                Guardar predefinidos
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
       <div className="bg-white p-6 rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
         <table className="w-full text-left">
           <thead className="bg-zinc-50">
@@ -199,19 +281,62 @@ export default async function ParametrosPage() {
 async function crearParametroForm(formData: FormData) {
   'use server';
   await requirePanelAccess();
-  const valorRaw = formData.get("valor") as string;
-  let valor: number | boolean | string = Number(valorRaw);
-  if (Number.isNaN(valor)) {
-    valor = valorRaw;
+
+  // Detecta si viene del formulario genérico (clave/valor/descripcion)
+  // o del formulario de parámetros predefinidos (campos sueltos por clave).
+  const claveGenerica = (formData.get("clave") as string) || "";
+  const valorGenericoRaw = formData.get("valor") as string;
+
+  if (claveGenerica) {
+    let valor: number | boolean | string = Number(valorGenericoRaw);
+    if (Number.isNaN(valor)) {
+      valor = valorGenericoRaw;
+    }
+
+    const parametro: ParametroGlobalInsert = {
+      clave: claveGenerica,
+      valor,
+      descripcion: (formData.get("descripcion") as string) || null,
+    };
+
+    await crearParametroGlobal(parametro);
+    redirect("/panel/parametros");
+    return;
   }
 
-  const parametro: ParametroGlobalInsert = {
-    clave: formData.get("clave") as string,
-    valor,
-    descripcion: (formData.get("descripcion") as string) || null,
-  };
+  // Formulario de parámetros predefinidos: guarda cada clave por separado.
+  const predefinidos: Array<{ clave: string; valor: string }> = [
+    { clave: "anticipo_pct", valor: formData.get("anticipo_pct") as string },
+    {
+      clave: "vigencia_cotizacion_dias",
+      valor: formData.get("vigencia_cotizacion_dias") as string,
+    },
+    {
+      clave: "holgura_estimado_pct",
+      valor: formData.get("holgura_estimado_pct") as string,
+    },
+    { clave: "iva_modo", valor: formData.get("iva_modo") as string },
+  ];
 
-  await crearParametroGlobal(parametro);
+  for (const p of predefinidos) {
+    let valor: number | boolean | string = Number(p.valor);
+    if (Number.isNaN(valor)) {
+      valor = p.valor;
+    }
+
+    // Upsert: si ya existe, actualiza; si no, crea.
+    const existente = await obtenerParametroGlobal(p.clave);
+    if (existente) {
+      await actualizarParametroGlobal(p.clave, { valor });
+    } else {
+      await crearParametroGlobal({
+        clave: p.clave,
+        valor,
+        descripcion: null,
+      });
+    }
+  }
+
   redirect("/panel/parametros");
 }
 

@@ -1,22 +1,27 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { getPanelSession } from "@/lib/auth/server";
 import {
-  crearProducto,
-  desactivarProducto,
-  listarCategorias,
-  listarProductos,
-  actualizarProducto,
-  type Producto,
-  type ProductoInsert,
-} from "@/lib/panel/productos";
-import { requirePanelAccess } from "@/lib/auth/server";
+  crearProductoForm,
+  desactivarProductoForm,
+  listarProductosConCategorias,
+  listarCategoriasParaForm,
+} from "@/lib/panel/productos-forms";
+import { FotoInput } from "@/components/foto-input";
 
 export default async function ProductosPage() {
+  const session = await getPanelSession();
+  const esPropietario = session?.rol === "propietario";
+
   const [productos, categorias] = await Promise.all([
-    listarProductos(),
-    listarCategorias(),
+    listarProductosConCategorias(),
+    listarCategoriasParaForm(),
   ]);
+
+  const productosConCategoria = productos.map((p) => ({
+    ...p,
+    categoria_nombre: p.categorias?.nombre ?? null,
+  }));
 
   return (
     <div className="space-y-6">
@@ -24,12 +29,18 @@ export default async function ProductosPage() {
         <h1 className="text-2xl font-bold text-zinc-900">Catálogo de productos</h1>
         <p className="text-zinc-600">
           Administra los productos del catálogo. Los costos y márgenes privados
-          se gestionan desde la sección de precios (Fase 5).
+          solo son visibles para el propietario.
         </p>
       </div>
 
-      <form action={crearProductoForm} className="space-y-4 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-zinc-900 mb-4">Nuevo producto</h2>
+      {/* Formulario de creación con FotoInput */}
+      <form
+        action={crearProductoForm}
+        className="space-y-4 bg-white p-6 rounded-lg border border-zinc-200 shadow-sm"
+      >
+        <h2 className="text-lg font-semibold text-zinc-900 mb-4">
+          Nuevo producto
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="col-span-full sm:col-span-2">
             <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -57,6 +68,22 @@ export default async function ProductosPage() {
               ))}
             </select>
           </div>
+          <div className="col-span-full sm:col-span-2">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Descripción
+            </label>
+            <textarea
+              name="descripcion"
+              rows={2}
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div className="col-span-full">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Fotografía
+            </label>
+            <FotoInput name="foto" />
+          </div>
           <div>
             <label className="block text-sm font-medium text-zinc-700 mb-1">
               Unidad de compra
@@ -74,16 +101,6 @@ export default async function ProductosPage() {
             <input
               name="unidad_venta"
               defaultValue="rebanada"
-              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            />
-          </div>
-          <div className="col-span-full sm:col-span-2">
-            <label className="block text-sm font-medium text-zinc-700 mb-1">
-              Descripción
-            </label>
-            <textarea
-              name="descripcion"
-              rows={2}
               className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
@@ -111,7 +128,82 @@ export default async function ProductosPage() {
               className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
           </div>
+          <div className="col-span-full sm:col-span-2">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Porción de referencia por persona
+            </label>
+            <input
+              name="porcion_referencia_persona"
+              type="number"
+              step="0.01"
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div className="col-span-full sm:col-span-2">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Alérgenos (separados por coma)
+            </label>
+            <input
+              name="alergenos"
+              placeholder="Ej: gluten, leche, frutos secos"
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          {esPropietario && (
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Costo unitario de compra (MXN)
+              </label>
+              <input
+                name="costo_unitario_compra"
+                type="number"
+                step="0.01"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          )}
+          {esPropietario && (
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Margen propio (%)
+              </label>
+              <input
+                name="margen_propio_pct"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          )}
+          {esPropietario && (
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Precio fijo manual (MXN, opcional)
+              </label>
+              <input
+                name="precio_fijo_manual"
+                type="number"
+                step="0.01"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          )}
           <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Estado
+            </label>
+            <select
+              name="estado"
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <option value="activo">Activo</option>
+              <option value="agotado_temporal">Agotado temporal</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+          </div>
+          <div className="flex items-end">
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-medium"
@@ -141,7 +233,7 @@ export default async function ProductosPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-200">
-            {productos.map((p) => (
+            {productosConCategoria.map((p) => (
               <tr key={p.id} className="hover:bg-zinc-50">
                 <td className="px-4 py-3">
                   <div className="font-medium text-zinc-900">{p.nombre}</div>
@@ -151,8 +243,7 @@ export default async function ProductosPage() {
                 </td>
                 <td className="px-4 py-3">
                   <span className="text-sm text-zinc-600">
-                    {(p as { categorias?: { nombre: string | null } | null })
-                      ?.categorias?.nombre ?? "—"}
+                    {p.categoria_nombre ?? "—"}
                   </span>
                 </td>
                 <td className="px-4 py-3">
@@ -169,16 +260,15 @@ export default async function ProductosPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  <button
-                    formAction={editarProductoForm}
-                    form={String(p.id)}
+                  <a
+                    href={`/panel/productos/${p.id}/editar`}
                     className="text-sm text-blue-600 hover:underline mr-4"
                   >
                     Editar
-                  </button>
+                  </a>
                   <button
                     formAction={desactivarProductoForm}
-                    form={String(p.id)}
+                    form={`desactivar-producto-${p.id}`}
                     className="text-sm text-red-600 hover:underline"
                   >
                     Desactivar
@@ -190,98 +280,9 @@ export default async function ProductosPage() {
         </table>
       </div>
 
-      <form action={editarProductoForm} className="hidden">
-        <input name="id" />
-        <input name="nombre" />
-        <input name="descripcion" />
-        <input name="foto_url" />
-        <input name="categoria_id" />
-        <input name="orden_visualizacion" />
-        <input name="unidad_compra" />
-        <input name="unidad_venta" />
-        <input name="factor_conversion" />
-        <input name="merma_pct" />
-        <input name="porcion_referencia_persona" />
-        <input name="alergenos" />
-        <input name="etiquetas" />
-        <input name="estado" />
-      </form>
-
       <form action={desactivarProductoForm} className="hidden">
         <input name="id" />
       </form>
     </div>
   );
-}
-
-async function crearProductoForm(formData: FormData) {
-  'use server';
-  await requirePanelAccess();
-  const producto: ProductoInsert = {
-    nombre: formData.get("nombre") as string,
-    categoria_id:
-      formData.get("categoria_id") === ""
-        ? null
-        : Number(formData.get("categoria_id")),
-    descripcion: (formData.get("descripcion") as string) || null,
-    foto_url: (formData.get("foto_url") as string) || null,
-    orden_visualizacion: Number(formData.get("orden_visualizacion")) || 0,
-    unidad_compra: (formData.get("unidad_compra") as string) || "kg",
-    unidad_venta: (formData.get("unidad_venta") as string) || "pieza",
-    factor_conversion: Number(formData.get("factor_conversion")) || 1,
-    merma_pct: Number(formData.get("merma_pct")) || 0,
-    porcion_referencia_persona:
-      formData.get("porcion_referencia_persona") === ""
-        ? null
-        : Number(formData.get("porcion_referencia_persona")),
-    alergenos: null,
-    etiquetas: null,
-    estado: "activo",
-  };
-
-  await crearProducto(producto);
-  redirect("/panel/productos");
-}
-
-async function editarProductoForm(formData: FormData) {
-  'use server';
-  await requirePanelAccess();
-  const id = Number(formData.get("id"));
-  const cambios = {
-    nombre: formData.get("nombre") as string,
-    categoria_id:
-      formData.get("categoria_id") === ""
-        ? null
-        : Number(formData.get("categoria_id")),
-    descripcion: (formData.get("descripcion") as string) || null,
-    foto_url: (formData.get("foto_url") as string) || null,
-    orden_visualizacion: Number(formData.get("orden_visualizacion")) || 0,
-    unidad_compra: (formData.get("unidad_compra") as string) || "kg",
-    unidad_venta: (formData.get("unidad_venta") as string) || "pieza",
-    factor_conversion: Number(formData.get("factor_conversion")) || 1,
-    merma_pct: Number(formData.get("merma_pct")) || 0,
-    porcion_referencia_persona:
-      formData.get("porcion_referencia_persona") === ""
-        ? null
-        : Number(formData.get("porcion_referencia_persona")),
-    alergenos: null,
-    etiquetas: null,
-    estado: (() => {
-      const estadoStr = formData.get("estado") as string;
-      return ["activo", "agotado_temporal", "inactivo"].includes(estadoStr)
-        ? (estadoStr as Producto["estado"])
-        : "activo";
-    })(),
-  };
-
-  await actualizarProducto(id, cambios);
-  redirect("/panel/productos");
-}
-
-async function desactivarProductoForm(formData: FormData) {
-  'use server';
-  await requirePanelAccess();
-  const id = Number(formData.get("id"));
-  await desactivarProducto(id);
-  redirect("/panel/productos");
 }

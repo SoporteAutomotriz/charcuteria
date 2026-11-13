@@ -15,13 +15,13 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 12-11-2026 — Fase 4 completada (protección de Server Actions del panel con requirePanelAccess).
+Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Entregables de fase fotos (categorías CRUD, producto extendido con costo/margen/precio fijo/porción/alérgenos/estado, parámetros extendidos) completados y comiteados en rama fase-fotos-productos-paquetes.
 
 ### Working
 
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
-- `npm run lint` en verde (ESLint sin errores)
+- `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
 - `npm run test` en verde (Vitest: 118 pruebas pasando — incluye store, validaciones, estimado, action, cotizacion-publica, RLS estáticas; rls-integration falla solo por falta de env vars de Supabase, problema preexistente)
 - `npm run dev` funcionando en http://localhost:3000
 - `npm run build` exitoso (producción)
@@ -31,26 +31,26 @@ Update this section every time you return to this vault. **Last updated:** 12-11
 - Fase 4 completa: panel del propietario para catálogo (productos, paquetes con componentes, zonas de transporte, tarifas de montaje, parámetros globales) — Server Actions de mutación protegidas con requirePanelAccess (rol propietario/administrador)
 - Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
+- Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
 
-### Working
+### Entregables fase fotos (comiteados, sin push)
 
-- Migraciones Fase 2 aplicadas al proyecto de Supabase remoto (sujljkevonamhqbyszmz)
-- Pruebas de integración RLS pasando contra el remoto (usuarios admin@test.local y propietario@test.local creados en Auth con roles en usuarios_personal)
-- Migración 05: tablas privadas producto_costos, producto_margenes, paquete_margenes (solo rol propietario)
-- Migración 06: arregló recursión infinita de RLS en usuarios_personal y agregó columna actualizado_en
-- Fase 3 BD: sin nuevas migraciones (usa tablas privadas existentes de Fase 2)
-- Migración 09: función PL/pgSQL confirmar_cotizacion_atomica (confirmación atómica de cotización)
+1. CRUD mínimo de categorías — `src/lib/panel/categorias.ts`, `src/app/panel/(panel)/categorias/page.tsx`, migración semilla `supabase/migrations/20261113000010_10_categorias_semilla.sql`
+2. Formulario de producto extendido con costo/margen/precio fijo/porción/alérgenos/estado — `src/lib/panel/productos.ts`, `src/lib/panel/productos-forms.ts`, `src/app/panel/(panel)/productos/page.tsx`, `src/app/panel/(panel)/productos/[id]/editar/page.tsx`. Admin bloqueado de tablas privadas (producto_costos, producto_margenes) vía `esPropietario` check dentro de cada Server Action.
+3. Parámetros extendidos — `src/lib/panel/parametros.ts` (anticipo_pct, vigencia_cotizacion_dias, holgura_estimado_pct, PARAMETROS_TEXTO, IVA_MODO_OPCIONES, validarValorSeleccion) y `src/app/panel/(panel)/parametros/page.tsx` (formulario de predefinidos con upsert).
+4. Integration test: Administrador crea/edita producto sin costo ni margen, éxito, sin filas en producto_costos/producto_margenes — `src/test/rls-integration.test.ts`.
+
+Commits en rama fase-fotos-productos-paquetes:
+- 03b316c — feat: parámetros extendidos (anticipo, vigencia, holgura, modo IVA)
+- 5df0860 — test: admin puede crear/editar producto sin costo ni margen
 
 ### Broken / Blocked
 
-- (ninguno — Fase 4 cerrada)
+- (ninguno)
 
 ### Focus right now
 
-- Fase 4 completada: panel del propietario para catálogo (protección de Server Actions con requirePanelAccess). Listo para pasar a Fase 7 (deploy y configuración de env vars de Resend/WhatsApp).
-- Pendientes menores Fase 6 (decisión del dueño): rate limiting distribuido para producción (Vercel KV/Upstash), invalidar token tras primera lectura, llenar columna ip en bitacora_auditoria
-
-**Importante:** No tocar el proyecto de producción conectado a Vercel en ningún momento.
+- Pedir confirmación al dueño antes de pushear rama fase-fotos-productos-paquetes (regla CLAUDE.md #6: no push sin confirmación).
 
 ## Key Decisions Made
 
@@ -58,6 +58,7 @@ Update this section every time you return to this vault. **Last updated:** 12-11
 - **Vitest configurado** con `@vitejs/plugin-react`, jsdom, `@testing-library/jest-dom/vitest` y alias `@/`
 - **Hosting:** Vercel (opción B) adoptada; Cloudflare Pages (opción A) descartada (404, adaptador archivado)
 - **Fase 2 BD:** modelo de versionado (opción b), `cotizaciones_costos` privada solo propietario, sin políticas `anon` en tablas de cotizaciones
+- **Storage de fotos:** bucket público "productos", nombre temporal UUID en creación, rename a `{tipo}-{id}.{ext}` tras conocer el ID, 5MB sin compresión
 
 ## File Map
 
@@ -70,6 +71,7 @@ Update this section every time you return to this vault. **Last updated:** 12-11
 - `supabase/migrations/20261109000002_02_cotizaciones_costos_y_versiones.sql` — cotizaciones, costos, versiones (Fase 2)
 - `supabase/migrations/20261109000003_03_trigger_congelar_version.sql` — trigger congelado al llegar a "enviada" (Fase 2)
 - `supabase/migrations/20261109000004_04_eliminar_politica_anon_testing.sql` — eliminar política anon (Fase 2)
+- `supabase/migrations/20261109000007_07_storage_productos_fotos.sql` — bucket Storage productos + RLS (fase fotos)
 - `docs/MIGRACIONES_FASE_2_SQL.md` — códigos SQL listos para pegar en el SQL Editor de Supabase (Fase 2)
 - `src/app/page.test.tsx` — prueba mínima de Vitest
 - `src/test/rls-policies.test.ts` — 35 pruebas estáticas de RLS
