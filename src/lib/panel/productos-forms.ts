@@ -172,8 +172,13 @@ export async function editarProductoForm(formData: FormData) {
   try {
     const id = Number(formData.get("id"));
     const archivoRaw = formData.get("foto");
-    // Solo procesar la foto si es un File real con nombre (el input vacío no envía nada útil)
-    const archivo = archivoRaw instanceof File && archivoRaw.name ? (archivoRaw as File) : null;
+    // Solo procesar la foto si es un File real, con nombre y con contenido.
+    // Un input de archivo sin selección puede enviar un File vacío que
+    // subirFotoProducto rechazaría como tipo no permitido.
+    const archivo =
+      archivoRaw instanceof File && archivoRaw.name && archivoRaw.size > 0
+        ? (archivoRaw as File)
+        : null;
     const eliminarFotoRaw = formData.get("eliminar_foto") === "on";
 
     // Obtener el producto actual para saber si hay foto previa
