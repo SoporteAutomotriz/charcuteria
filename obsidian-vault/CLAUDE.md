@@ -38,6 +38,8 @@ Update this section every time you return to this vault. **Last updated:** 13-11
   - Commit b585ede: restaurado CRUD completo de `/panel/categorias` accesible para ambos roles (propietario y administrador) vía `requirePanelAccess`; agregado al menú de navegación del panel.
   - Commit 78d65fa: corregido error al crear producto sin foto — en `crearProductoForm` se valida que el archivo sea un File real con nombre y `size > 0` antes de procesarlo, evitando el error "Tipo de archivo no permitido" cuando el input de foto queda vacío.
   - Commit 4b6c9ae: corregido recuento de indicadores en `/panel` — las consultas de conteo usan `select('*', { head: true, count: 'exact' })` para productos, paquetes, usuarios y cotizaciones.
+  - Commit e6564c1: corregido error al crear paquete sin foto — misma validación en `crearPaqueteForm`.
+  - Commit 1d2843c: agregar eliminar componentes individuales de un paquete — `eliminarComponenteForm` en `paquetes-forms.ts`; lista de componentes con botón Eliminar en `PaqueteEditarPage`.
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ### Entregables fase fotos (comiteados, sin push)

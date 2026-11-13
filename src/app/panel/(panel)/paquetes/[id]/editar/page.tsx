@@ -14,7 +14,8 @@ export default async function PaqueteEditarPage({
 }: {
   params: { id: string };
 }) {
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
 
   const { paquete, componentes } = await obtenerPaquete(id);
 
