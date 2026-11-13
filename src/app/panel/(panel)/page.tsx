@@ -10,10 +10,12 @@ export default async function PanelHome() {
   // Conteos simples para el dashboard (solo tablas públicas)
   const [productosRes, paquetesRes, usuariosRes, cotizacionesRes] =
     await Promise.all([
-      supabase.from("productos").select("count", { head: true }),
-      supabase.from("paquetes").select("count", { head: true }),
-      supabase.from("usuarios_personal").select("count", { head: true }),
-      supabase.from("cotizaciones").select("count", { head: true }),
+      supabase.from("productos").select("*", { head: true, count: "exact" }),
+      supabase.from("paquetes").select("*", { head: true, count: "exact" }),
+      supabase
+        .from("usuarios_personal")
+        .select("*", { head: true, count: "exact" }),
+      supabase.from("cotizaciones").select("*", { head: true, count: "exact" }),
     ]);
 
   const totalProductos = productosRes.count ?? 0;

@@ -36,6 +36,7 @@ Update this section every time you return to this vault. **Last updated:** 13-11
   - Commit 396afdb: `eliminarProducto()` en `src/lib/panel/productos.ts`; `eliminarProductoForm()` en `src/lib/panel/productos-forms.ts`; botón "Eliminar" (solo propietario) en `src/app/panel/(panel)/productos/page.tsx`; corregido cambio de estado al editar en `src/app/panel/(panel)/productos/[id]/editar/page.tsx` (eliminado input oculto duplicado `name="estado"`).
   - Commit 37cf5c5: agregados `margen_global_pct` e `iva_pct` al formulario de parámetros predefinidos en `/panel/parametros` (editable solo por propietario).
   - Commit b585ede: restaurado CRUD completo de `/panel/categorias` accesible para ambos roles (propietario y administrador) vía `requirePanelAccess`; agregado al menú de navegación del panel.
+  - Commit 78d65fa: corregido error al crear producto sin foto — en `crearProductoForm` se valida que el archivo sea un File real con nombre y `size > 0` antes de procesarlo, evitando el error "Tipo de archivo no permitido" cuando el input de foto queda vacío.
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ### Entregables fase fotos (comiteados, sin push)
