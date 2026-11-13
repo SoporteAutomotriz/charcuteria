@@ -22,7 +22,8 @@ export default async function ProductoEditarPage({
   const session = await getPanelSession();
   const esPropietario = session?.rol === "propietario";
 
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
 
   const producto = await obtenerProducto(id);
 

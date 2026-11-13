@@ -149,10 +149,10 @@ export async function crearProductoForm(formData: FormData) {
     }
 
     redirect("/panel/productos");
-  } catch (error: any) {
-    throw new Error(
-      `Error al crear el producto: ${error?.message ?? String(error)}`,
-    );
+  } catch (error) {
+    const mensaje =
+      error instanceof Error ? error.message : String(error);
+    throw new Error(`Error al crear el producto: ${mensaje}`);
   }
 }
 
@@ -265,10 +265,10 @@ export async function editarProductoForm(formData: FormData) {
     }
 
     redirect("/panel/productos");
-  } catch (error: any) {
-    throw new Error(
-      `Error al editar el producto: ${error?.message ?? String(error)}`,
-    );
+  } catch (error) {
+    const mensaje =
+      error instanceof Error ? error.message : String(error);
+    throw new Error(`Error al editar el producto: ${mensaje}`);
   }
 }
 
@@ -282,9 +282,9 @@ export async function desactivarProductoForm(formData: FormData) {
   try {
     await desactivarProducto(id);
     redirect("/panel/productos");
-  } catch (error: any) {
-    throw new Error(
-      `Error al desactivar el producto: ${error?.message ?? String(error)}`,
-    );
+  } catch (error) {
+    const mensaje =
+      error instanceof Error ? error.message : String(error);
+    throw new Error(`Error al desactivar el producto: ${mensaje}`);
   }
 }

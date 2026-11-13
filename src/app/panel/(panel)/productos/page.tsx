@@ -266,6 +266,13 @@ export default async function ProductosPage() {
                   >
                     Editar
                   </a>
+                  <form
+                    action={desactivarProductoForm}
+                    id={`desactivar-producto-${p.id}`}
+                    className="hidden"
+                  >
+                    <input name="id" defaultValue={String(p.id)} />
+                  </form>
                   <button
                     formAction={desactivarProductoForm}
                     form={`desactivar-producto-${p.id}`}
@@ -280,9 +287,6 @@ export default async function ProductosPage() {
         </table>
       </div>
 
-      <form action={desactivarProductoForm} className="hidden">
-        <input name="id" />
-      </form>
     </div>
   );
-}
+};
