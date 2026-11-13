@@ -260,7 +260,7 @@ function calcularLinea(
   const cantidadServida = toBig(item.cantidadServida);
   requirePositive(cantidadServida, `cantidadServida de ${item.productoId}`);
 
-  const merma = toBig(costo.merma);
+  const merma = pctAFactor(costo.merma);
   const rendimiento = Big(1).minus(merma);
   if (rendimiento.lte(0)) {
     throw new Error(

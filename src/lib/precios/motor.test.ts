@@ -134,7 +134,7 @@ describe("Motor de precios determinista (Fase 3)", () => {
 
     it("rechaza merma del 100 % o más (rendimiento nulo)", () => {
       const entrada = casoSimple();
-      entrada.costosPrivados["queso-manchego"].merma = "1";
+      entrada.costosPrivados["queso-manchego"].merma = "100";
       expect(() => cotizar(entrada)).toThrow(/rendimiento/);
     });
 

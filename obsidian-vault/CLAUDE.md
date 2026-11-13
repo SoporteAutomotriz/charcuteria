@@ -15,15 +15,15 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Idempotency key generada una sola vez al entrar al flujo de cotización (commit a30b82a), comiteado y pusheado en main.
+Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Fix [big.js] Invalid number: precio_fijo_manual=null se omite y se usa el margen propio (commit 63c3776 en main local, push pendiente por falta de conectividad a github.com).
 
 ### Working
 
-- `main` y `origin/main` sincronizadas (commit a30b82a pusheado)
+- `main` y `origin/main` sincronizadas hasta commit c7c87a6 (pusheado). Commit 63c3776 local no pusheado: `fatal: unable to access github.com port 443: Could not connect to server`.
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
-- `npm run test` en verde (Vitest: 118 pruebas pasando — incluye store, validaciones, estimado, action, cotizacion-publica, RLS estáticas; rls-integration falla solo por falta de env vars de Supabase, problema preexistente)
+- `npm run test` en verde (Vitest: 119 pruebas pasando — incluye store, validaciones, estimado, action, cotizacion-publica, RLS estáticas; rls-integration falla solo por falta de env vars de Supabase, problema preexistente)
 - `npm run dev` funcionando en http://localhost:3000
 - `npm run build` exitoso (producción)
 - Despliegue en Vercel: https://charcuteria-iota.vercel.app (Fase 1 cerrada)
@@ -50,6 +50,7 @@ Update this section every time you return to this vault. **Last updated:** 13-11
   - Commit 8b0ddc7: corregido redirect tras eliminar componente de paquete — ahora vuelve a `/panel/paquetes/[id]/editar` en lugar del listado general.
   - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar. (Posteriormente reemplazado por middleware que establece la cookie una sola vez al entrar al flujo, commits 8b9d4b5 y a30b82a.)
   - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente. (Posteriormente reemplazado por commits 8b9d4b5 y a30b82a.)
+  - Commit 63c3776 (LOCAL, no pusheado): fix [big.js] Invalid number cuando precio_fijo_manual es null — action.ts omite precio_fijo_manual cuando es null/undefined (cambio `!== undefined` → `!= null`); motor.ts tipa precioFijoManual como `string | null`; agregado casoSinPrecioFijo y test en motor.test.ts. Costo y margen propios siguen obligatorios con mensaje claro si faltan.
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ### Entregables fase fotos (comiteados, sin push)
@@ -65,11 +66,11 @@ Commits en rama fase-fotos-productos-paquetes:
 
 ### Working
 
-- `main` y `origin/main` sincronizadas (commit c7c87a6 pusheado, React #441 corregido en todas las 8 páginas del configurador con useSyncExternalStore vía useBorrador())
+- `main` y `origin/main` sincronizadas hasta commit c7c87a6 (pusheado). Commit 63c3776 local no pusheado: `fatal: unable to access github.com port 443: Could not connect to server`.
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
-- `npm run test` en verde (Vitest: 118 pruebas pasando — incluye store, validaciones, estimado, action, cotizacion-publica, RLS estáticas; rls-integration falla solo por falta de env vars de Supabase, problema preexistente)
+- `npm run test` en verde (Vitest: 119 pruebas pasando — incluye store, validaciones, estimado, action, cotizacion-publica, RLS estáticas; rls-integration falla solo por falta de env vars de Supabase, problema preexistente)
 - `npm run dev` funcionando en http://localhost:3000
 - `npm run build` exitoso (producción)
 - Despliegue en Vercel: https://charcuteria-iota.vercel.app (Fase 1 cerrada)
@@ -93,6 +94,7 @@ Commits en rama fase-fotos-productos-paquetes:
   - Commit 8b0ddc7: corregido redirect tras eliminar componente de paquete — ahora vuelve a `/panel/paquetes/[id]/editar` en lugar del listado general.
   - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar.
   - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente.
+  - Commit 63c3776 (LOCAL, no pusheado): fix [big.js] Invalid number cuando precio_fijo_manual es null — action.ts omite precio_fijo_manual cuando es null/undefined; motor.ts tipa precioFijoManual como `string | null`; agregado casoSinPrecioFijo y test en motor.test.ts. Costo y margen propios siguen obligatorios con mensaje claro si faltan.
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ## Key Decisions Made

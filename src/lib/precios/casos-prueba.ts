@@ -28,7 +28,7 @@ export function casoSimple(): MotorEntrada {
     costosPrivados: {
       "queso-manchego": {
         costoUnitarioCompra: "40.00",
-        merma: "0.10",
+        merma: "10",
         factorConversion: "1",
         margenPropioPct: "30",
       },
@@ -78,7 +78,7 @@ export function casoSinPrecioFijo(): MotorEntrada {
     costosPrivados: {
       "queso-manchego": {
         costoUnitarioCompra: "40.00",
-        merma: "0.10",
+        merma: "10",
         factorConversion: "1",
         margenPropioPct: "30",
         // precio_fijo_manual es null: debe omitirse y usar el margen propio.
@@ -106,7 +106,7 @@ export function casoConMargenCategoria(): MotorEntrada {
       "jamon-serrano": {
         // Sin margen propio y sin precio fijo: usa margen de categoría.
         costoUnitarioCompra: "80.00",
-        merma: "0.05",
+        merma: "5",
         factorConversion: "1",
       },
     },
@@ -160,7 +160,7 @@ export function casoMultiItem(): MotorEntrada {
     costosPrivados: {
       "queso-manchego": {
         costoUnitarioCompra: "40.00",
-        merma: "0.10",
+        merma: "10",
         factorConversion: "1",
         margenPropioPct: "30",
       },
@@ -199,7 +199,7 @@ export function casoConTransporte(): MotorEntrada {
     costosPrivados: {
       "queso-manchego": {
         costoUnitarioCompra: "40.00",
-        merma: "0.10",
+        merma: "10",
         factorConversion: "1",
         margenPropioPct: "30",
       },
@@ -263,7 +263,7 @@ export function casoConPersonal(): MotorEntrada {
     costosPrivados: {
       "queso-manchego": {
         costoUnitarioCompra: "40.00",
-        merma: "0.10",
+        merma: "10",
         factorConversion: "1",
         margenPropioPct: "30",
       },
@@ -295,7 +295,7 @@ export function casoZonaEspecial(): MotorEntrada {
     costosPrivados: {
       "queso-manchego": {
         costoUnitarioCompra: "40.00",
-        merma: "0.10",
+        merma: "10",
         factorConversion: "1",
         margenPropioPct: "30",
       },
