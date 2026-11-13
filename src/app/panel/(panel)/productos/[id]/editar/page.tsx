@@ -78,11 +78,20 @@ export default async function ProductoEditarPage({
             name="factor_conversion"
             defaultValue={String(producto.factor_conversion)}
           />
-          <input
-            type="hidden"
-            name="merma_pct"
-            defaultValue={String(producto.merma_pct)}
-          />
+          <div className="col-span-full sm:col-span-2">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Merma (%)
+            </label>
+            <input
+              name="merma_pct"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              defaultValue={String(producto.merma_pct)}
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="col-span-full sm:col-span-2">

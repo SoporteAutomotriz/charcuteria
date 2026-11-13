@@ -125,6 +125,8 @@ export default async function ProductosPage() {
               name="merma_pct"
               type="number"
               step="0.01"
+              min="0"
+              max="100"
               defaultValue="0"
               className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
