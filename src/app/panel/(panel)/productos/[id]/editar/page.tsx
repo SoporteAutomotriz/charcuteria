@@ -1,7 +1,12 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { obtenerProducto } from "@/lib/panel/productos";
+import { getPanelSession } from "@/lib/auth/server";
+import {
+  obtenerProducto,
+  obtenerProductoCosto,
+  obtenerProductoMargen,
+} from "@/lib/panel/productos";
 import {
   editarProductoForm,
   desactivarProductoForm,
@@ -14,6 +19,9 @@ export default async function ProductoEditarPage({
 }: {
   params: { id: string };
 }) {
+  const session = await getPanelSession();
+  const esPropietario = session?.rol === "propietario";
+
   const id = Number(params.id);
 
   const producto = await obtenerProducto(id);
@@ -23,6 +31,13 @@ export default async function ProductoEditarPage({
   }
 
   const categorias = await listarCategoriasParaForm();
+
+  const [costo, margen] = esPropietario
+    ? await Promise.all([
+        obtenerProductoCosto(id),
+        obtenerProductoMargen(id),
+      ])
+    : [null, null];
 
   return (
     <div className="space-y-6">
@@ -128,6 +143,101 @@ export default async function ProductoEditarPage({
                 </label>
               )}
             </div>
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Porción de referencia por persona
+              </label>
+              <input
+                name="porcion_referencia_persona"
+                type="number"
+                step="0.01"
+                defaultValue={
+                  producto.porcion_referencia_persona
+                    ? String(producto.porcion_referencia_persona)
+                    : ""
+                }
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Alérgenos (separados por coma)
+              </label>
+              <input
+                name="alergenos"
+                defaultValue={producto.alergenos?.join(", ") ?? ""}
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+            {esPropietario && (
+              <div className="col-span-full sm:col-span-2">
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Costo unitario de compra (MXN)
+                </label>
+                <input
+                  name="costo_unitario_compra"
+                  type="number"
+                  step="0.01"
+                  defaultValue={
+                    costo?.costo_unitario_compra
+                      ? String(costo.costo_unitario_compra)
+                      : ""
+                  }
+                  className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+            )}
+            {esPropietario && (
+              <div className="col-span-full sm:col-span-2">
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Margen propio (%)
+                </label>
+                <input
+                  name="margen_propio_pct"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  defaultValue={
+                    margen?.margen_propio_pct
+                      ? String(margen.margen_propio_pct)
+                      : ""
+                  }
+                  className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+            )}
+            {esPropietario && (
+              <div className="col-span-full sm:col-span-2">
+                <label className="block text-sm font-medium text-zinc-700 mb-1">
+                  Precio fijo manual (MXN, opcional)
+                </label>
+                <input
+                  name="precio_fijo_manual"
+                  type="number"
+                  step="0.01"
+                  defaultValue={
+                    margen?.precio_fijo_manual
+                      ? String(margen.precio_fijo_manual)
+                      : ""
+                  }
+                  className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Estado
+              </label>
+              <select
+                name="estado"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              >
+                <option value="activo">Activo</option>
+                <option value="agotado_temporal">Agotado temporal</option>
+                <option value="inactivo">Inactivo</option>
+              </select>
+            </div>
             <div className="flex items-end">
               <button
                 type="submit"
@@ -138,17 +248,17 @@ export default async function ProductoEditarPage({
             </div>
           </div>
         </form>
-      </div>
 
-      <form action={desactivarProductoForm} className="mt-6">
-        <input type="hidden" name="id" defaultValue={String(producto.id)} />
-        <button
-          type="submit"
-          className="text-sm text-red-600 hover:underline"
-        >
-          Desactivar producto
-        </button>
-      </form>
+        <form action={desactivarProductoForm} className="mt-6">
+          <input type="hidden" name="id" defaultValue={String(producto.id)} />
+          <button
+            type="submit"
+            className="text-sm text-red-600 hover:underline"
+          >
+            Desactivar producto
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

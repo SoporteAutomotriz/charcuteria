@@ -1,5 +1,6 @@
 "use server";
 
+import { getPanelSession } from "@/lib/auth/server";
 import {
   crearProductoForm,
   desactivarProductoForm,
@@ -9,6 +10,9 @@ import {
 import { FotoInput } from "@/components/foto-input";
 
 export default async function ProductosPage() {
+  const session = await getPanelSession();
+  const esPropietario = session?.rol === "propietario";
+
   const [productos, categorias] = await Promise.all([
     listarProductosConCategorias(),
     listarCategoriasParaForm(),
@@ -25,7 +29,7 @@ export default async function ProductosPage() {
         <h1 className="text-2xl font-bold text-zinc-900">Catálogo de productos</h1>
         <p className="text-zinc-600">
           Administra los productos del catálogo. Los costos y márgenes privados
-          se gestionan desde la sección de precios (Fase 5).
+          solo son visibles para el propietario.
         </p>
       </div>
 
@@ -123,6 +127,81 @@ export default async function ProductosPage() {
               defaultValue="0"
               className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
+          </div>
+          <div className="col-span-full sm:col-span-2">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Porción de referencia por persona
+            </label>
+            <input
+              name="porcion_referencia_persona"
+              type="number"
+              step="0.01"
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          <div className="col-span-full sm:col-span-2">
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Alérgenos (separados por coma)
+            </label>
+            <input
+              name="alergenos"
+              placeholder="Ej: gluten, leche, frutos secos"
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+          </div>
+          {esPropietario && (
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Costo unitario de compra (MXN)
+              </label>
+              <input
+                name="costo_unitario_compra"
+                type="number"
+                step="0.01"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          )}
+          {esPropietario && (
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Margen propio (%)
+              </label>
+              <input
+                name="margen_propio_pct"
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          )}
+          {esPropietario && (
+            <div className="col-span-full sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-700 mb-1">
+                Precio fijo manual (MXN, opcional)
+              </label>
+              <input
+                name="precio_fijo_manual"
+                type="number"
+                step="0.01"
+                className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Estado
+            </label>
+            <select
+              name="estado"
+              className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            >
+              <option value="activo">Activo</option>
+              <option value="agotado_temporal">Agotado temporal</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
           </div>
           <div className="flex items-end">
             <button

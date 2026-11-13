@@ -7,7 +7,8 @@ import {
   crearCategoria,
   actualizarCategoria,
   eliminarCategoria,
-  type Categoria,
+  type CategoriaInsert,
+  type CategoriaUpdate,
 } from "@/lib/panel/categorias";
 import { requirePanelAccess } from "@/lib/auth/server";
 

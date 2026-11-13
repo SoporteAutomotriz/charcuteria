@@ -2,7 +2,10 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { requirePanelAccess } from "@/lib/auth/server";
+import {
+  getPanelSession,
+  requirePanelAccess,
+} from "@/lib/auth/server";
 import {
   subirFotoProducto,
   renombrarFotoProducto,
@@ -14,6 +17,8 @@ import {
   actualizarProducto,
   desactivarProducto,
   listarCategorias,
+  upsertProductoCosto,
+  upsertProductoMargen,
   type Producto,
   type ProductoInsert,
 } from "@/lib/panel/productos";
@@ -53,10 +58,15 @@ export async function listarCategoriasParaForm(): Promise<
  * Form handler para crear un producto.
  * Si se incluye un archivo en `foto`, se sube a Storage con nombre temporal,
  * se crea el producto, y luego se renombra el archivo con el ID definitivo.
+ *
+ * Los campos privados (costo, margen, precio fijo) solo se escriben cuando
+ * el usuario es propietario. Un administrador crea el producto sin tocarlos.
  */
 export async function crearProductoForm(formData: FormData) {
   'use server';
   await requirePanelAccess();
+  const session = await getPanelSession();
+  const esPropietario = session?.rol === "propietario";
 
   const archivo = formData.get("foto") as File | null;
   let fotoUrl: string | null = null;
@@ -69,6 +79,12 @@ export async function crearProductoForm(formData: FormData) {
     nombreArchivoTemporal = nombreArchivo;
     fotoUrl = urlPublicaFotoProducto(ruta);
   }
+
+  const alergenosRaw = (formData.get("alergenos") as string) || "";
+  const alergenos = alergenosRaw
+    .split(",")
+    .map((a) => a.trim())
+    .filter(Boolean);
 
   const producto: ProductoInsert = {
     nombre: formData.get("nombre") as string,
@@ -87,12 +103,39 @@ export async function crearProductoForm(formData: FormData) {
       formData.get("porcion_referencia_persona") === ""
         ? null
         : Number(formData.get("porcion_referencia_persona")),
-    alergenos: null,
+    alergenos: alergenos.length > 0 ? alergenos : null,
     etiquetas: null,
-    estado: "activo",
+    estado: (() => {
+      const estadoStr = formData.get("estado") as string;
+      return ["activo", "agotado_temporal", "inactivo"].includes(estadoStr)
+        ? (estadoStr as Producto["estado"])
+        : "activo";
+    })(),
   };
 
   const productoCreado = await crearProducto(producto);
+
+  // Campos privados: solo el propietario escribe en tablas privadas.
+  // Un administrador nunca toca producto_costos ni producto_margenes.
+  if (esPropietario && productoCreado.id) {
+    const costoRaw = (formData.get("costo_unitario_compra") as string) || "";
+    const costo = costoRaw === "" ? null : Number(costoRaw);
+    if (costo !== null) {
+      await upsertProductoCosto(productoCreado.id, costo);
+    }
+
+    const margenRaw = (formData.get("margen_propio_pct") as string) || "";
+    const margen = margenRaw === "" ? null : Number(margenRaw);
+    const precioFijoRaw = (formData.get("precio_fijo_manual") as string) || "";
+    const precioFijo = precioFijoRaw === "" ? null : Number(precioFijoRaw);
+    if (margen !== null || precioFijo !== null) {
+      await upsertProductoMargen(
+        productoCreado.id,
+        margen ?? 0,
+        precioFijo,
+      );
+    }
+  }
 
   // Renombrar el archivo con el ID definitivo y actualizar la URL
   if (nombreArchivoTemporal && productoCreado.id) {
@@ -110,10 +153,15 @@ export async function crearProductoForm(formData: FormData) {
 /**
  * Form handler para editar un producto.
  * Permite reemplazar la foto o eliminarla.
+ *
+ * Los campos privados (costo, margen, precio fijo) solo se escriben cuando
+ * el usuario es propietario. Un administrador edita el producto sin tocarlos.
  */
 export async function editarProductoForm(formData: FormData) {
   'use server';
   await requirePanelAccess();
+  const session = await getPanelSession();
+  const esPropietario = session?.rol === "propietario";
 
   const id = Number(formData.get("id"));
   const archivo = formData.get("foto") as File | null;
@@ -156,6 +204,12 @@ export async function editarProductoForm(formData: FormData) {
     fotoUrl = urlPublicaFotoProducto(rutaDefinitiva);
   }
 
+  const alergenosRaw = (formData.get("alergenos") as string) || "";
+  const alergenos = alergenosRaw
+    .split(",")
+    .map((a) => a.trim())
+    .filter(Boolean);
+
   const cambios: Partial<Producto> = {
     nombre: formData.get("nombre") as string,
     categoria_id:
@@ -173,7 +227,7 @@ export async function editarProductoForm(formData: FormData) {
       formData.get("porcion_referencia_persona") === ""
         ? null
         : Number(formData.get("porcion_referencia_persona")),
-    alergenos: null,
+    alergenos: alergenos.length > 0 ? alergenos : null,
     etiquetas: null,
     estado: (() => {
       const estadoStr = formData.get("estado") as string;
@@ -184,6 +238,25 @@ export async function editarProductoForm(formData: FormData) {
   };
 
   await actualizarProducto(id, cambios);
+
+  // Campos privados: solo el propietario escribe en tablas privadas.
+  // Un administrador nunca toca producto_costos ni producto_margenes.
+  if (esPropietario) {
+    const costoRaw = (formData.get("costo_unitario_compra") as string) || "";
+    const costo = costoRaw === "" ? null : Number(costoRaw);
+    if (costo !== null) {
+      await upsertProductoCosto(id, costo);
+    }
+
+    const margenRaw = (formData.get("margen_propio_pct") as string) || "";
+    const margen = margenRaw === "" ? null : Number(margenRaw);
+    const precioFijoRaw = (formData.get("precio_fijo_manual") as string) || "";
+    const precioFijo = precioFijoRaw === "" ? null : Number(precioFijoRaw);
+    if (margen !== null || precioFijo !== null) {
+      await upsertProductoMargen(id, margen ?? 0, precioFijo);
+    }
+  }
+
   redirect("/panel/productos");
 }
 
