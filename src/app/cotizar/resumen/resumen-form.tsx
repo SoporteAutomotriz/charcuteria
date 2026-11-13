@@ -30,10 +30,10 @@ export default function ResumenForm({
   // Se debe hacer desde el cliente porque cookies().set() no está permitido
   // durante el render de un Server Component en Next.js 15.
   useEffect(() => {
-    generarIdempotencyCookie().catch(() => {
+    generarIdempotencyCookie(idempotencyKey).catch(() => {
       // Si falla, el envío ya dará error de idempotencia y se mostrará al usuario
     });
-  }, []);
+  }, [idempotencyKey]);
 
   const resultados = validarBorradorCompleto(borrador);
   const todosValidos = borradorEsValido(borrador);

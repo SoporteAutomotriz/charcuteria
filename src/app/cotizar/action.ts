@@ -20,7 +20,6 @@ import { generarTokenCotizacion, fechaExpiracionToken } from "@/lib/panel/cotiza
 import { generarFolioUnico } from "@/lib/cotizar/folio";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
-import { generarIdempotencyKey } from "@/lib/cotizar/idempotency";
 
 export type CotizacionInsert = Database["public"]["Tables"]["cotizaciones"]["Insert"];
 export type CotizacionCostoInsert =
@@ -29,12 +28,12 @@ export type CotizacionCostoInsert =
 /**
  * Server Action: generarIdempotencyCookie (Fase 5, paso 8).
  *
- * Establece la cookie httpOnly con la clave de idempotencia generada en el
- * servidor. Solo puede llamarse desde el cliente antes de enviar la solicitud.
+ * Establece la cookie httpOnly con la clave de idempotencia que el servidor
+ * ya generó y pasó al cliente. El cliente la envía en el formulario y el
+ * servidor valida que coincida con la cookie antes de aceptar.
  */
-export async function generarIdempotencyCookie() {
+export async function generarIdempotencyCookie(idempotencyKey: string) {
   const cookieStore = await cookies();
-  const idempotencyKey = generarIdempotencyKey();
 
   cookieStore.set("idempotency_key", idempotencyKey, {
     httpOnly: true,
@@ -42,8 +41,6 @@ export async function generarIdempotencyCookie() {
     path: "/",
     maxAge: 60 * 15, // 15 minutos
   });
-
-  return idempotencyKey;
 }
 
 interface ProductoConCosto {
