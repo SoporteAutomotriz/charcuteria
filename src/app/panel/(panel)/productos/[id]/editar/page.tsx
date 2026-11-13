@@ -232,6 +232,7 @@ export default async function ProductoEditarPage({
               </label>
               <select
                 name="estado"
+                defaultValue={producto.estado}
                 className="w-full border border-zinc-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               >
                 <option value="activo">Activo</option>
