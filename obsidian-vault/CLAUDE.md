@@ -15,7 +15,7 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 12-11-2026 — Fase fotos (subida de fotos de productos a Supabase Storage) completada y comiteada en rama fase-fotos-productos-paquetes (commit 4374483).
+Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Entregables de fase fotos (categorías CRUD, producto extendido con costo/margen/precio fijo/porción/alérgenos/estado, parámetros extendidos) completados y comiteados en rama fase-fotos-productos-paquetes.
 
 ### Working
 
@@ -33,14 +33,24 @@ Update this section every time you return to this vault. **Last updated:** 12-11
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 - Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
 
+### Entregables fase fotos (comiteados, sin push)
+
+1. CRUD mínimo de categorías — `src/lib/panel/categorias.ts`, `src/app/panel/(panel)/categorias/page.tsx`, migración semilla `supabase/migrations/20261113000010_10_categorias_semilla.sql`
+2. Formulario de producto extendido con costo/margen/precio fijo/porción/alérgenos/estado — `src/lib/panel/productos.ts`, `src/lib/panel/productos-forms.ts`, `src/app/panel/(panel)/productos/page.tsx`, `src/app/panel/(panel)/productos/[id]/editar/page.tsx`. Admin bloqueado de tablas privadas (producto_costos, producto_margenes) vía `esPropietario` check dentro de cada Server Action.
+3. Parámetros extendidos — `src/lib/panel/parametros.ts` (anticipo_pct, vigencia_cotizacion_dias, holgura_estimado_pct, PARAMETROS_TEXTO, IVA_MODO_OPCIONES, validarValorSeleccion) y `src/app/panel/(panel)/parametros/page.tsx` (formulario de predefinidos con upsert).
+4. Integration test: Administrador crea/edita producto sin costo ni margen, éxito, sin filas en producto_costos/producto_margenes — `src/test/rls-integration.test.ts`.
+
+Commits en rama fase-fotos-productos-paquetes:
+- 03b316c — feat: parámetros extendidos (anticipo, vigencia, holgura, modo IVA)
+- 5df0860 — test: admin puede crear/editar producto sin costo ni margen
+
 ### Broken / Blocked
 
 - (ninguno)
 
 ### Focus right now
 
-- Implementar subida de fotos para paquetes (paquetes/page.tsx) siguiendo el mismo patrón de productos
-- Luego: limpiar lint warnings, commit, pedir confirmación al dueño antes de pushear rama fase-fotos-productos-paquetes
+- Pedir confirmación al dueño antes de pushear rama fase-fotos-productos-paquetes (regla CLAUDE.md #6: no push sin confirmación).
 
 ## Key Decisions Made
 
