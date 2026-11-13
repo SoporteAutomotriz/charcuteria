@@ -11,6 +11,7 @@ import {
   crearPaquete,
   actualizarPaquete,
   eliminarPaquete,
+  eliminarComponente,
   type Paquete,
   type PaqueteInsert,
 } from "@/lib/panel/paquetes";
@@ -127,6 +128,17 @@ export async function editarPaqueteForm(formData: FormData) {
 
   await actualizarPaquete(id, cambios);
   redirect("/panel/paquetes");
+}
+
+/**
+ * Form handler para eliminar un componente de un paquete.
+ */
+export async function eliminarComponenteForm(formData: FormData) {
+  'use server';
+  await requirePanelAccess();
+  const id = Number(formData.get("id"));
+  await eliminarComponente(id);
+  redirect(`/panel/paquetes/${Number(formData.get("paquete_id"))}`);
 }
 
 /**
