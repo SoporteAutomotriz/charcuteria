@@ -13,7 +13,16 @@ export type ParametroGlobalUpdate =
 export const PARAMETROS_NUMERICOS = new Set([
   "margen_global_pct",
   "iva_pct",
+  "anticipo_pct",
+  "vigencia_cotizacion_dias",
+  "holgura_estimado_pct",
 ]);
+
+/** Claves cuyos valores son texto de selección (no numéricos). */
+export const PARAMETROS_TEXTO = new Set(["iva_modo"]);
+
+/** Valores posibles para el modo de IVA. */
+export const IVA_MODO_OPCIONES = ["incluido", "desglosado"] as const;
 
 /** Valida que el valor sea numérico para claves conocidas del motor de precios. */
 function validarValorNumerico(clave: string, valor: unknown): void {
@@ -23,6 +32,22 @@ function validarValorNumerico(clave: string, valor: unknown): void {
     throw new Error(
       `El parámetro '${clave}' debe contener un valor numérico válido`,
     );
+  }
+}
+
+/** Valida que el valor sea una opción permitida para claves de selección. */
+function validarValorSeleccion(clave: string, valor: unknown): void {
+  if (clave === "iva_modo") {
+    if (
+      typeof valor !== "string" ||
+      !IVA_MODO_OPCIONES.includes(valor as (typeof IVA_MODO_OPCIONES)[number])
+    ) {
+      throw new Error(
+        `El parámetro '${clave}' debe ser '${IVA_MODO_OPCIONES.join(
+          "' o '",
+        )}'`,
+      );
+    }
   }
 }
 
@@ -66,6 +91,7 @@ export async function crearParametroGlobal(
   await requirePropietario();
 
   validarValorNumerico(parametro.clave, parametro.valor);
+  validarValorSeleccion(parametro.clave, parametro.valor);
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -89,6 +115,7 @@ export async function actualizarParametroGlobal(
 
   if (cambios.valor !== undefined) {
     validarValorNumerico(clave, cambios.valor);
+    validarValorSeleccion(clave, cambios.valor);
   }
 
   const supabase = await createClient();
@@ -124,4 +151,8 @@ export async function eliminarParametroGlobal(clave: string): Promise<void> {
 export const PARAMETROS_CONOCIDOS = {
   MARGEN_GLOBAL_PCT: "margen_global_pct",
   IVA_PCT: "iva_pct",
+  ANTICIPO_PCT: "anticipo_pct",
+  VIGENCIA_COTIZACION_DIAS: "vigencia_cotizacion_dias",
+  HOLGURA_ESTIMADO_PCT: "holgura_estimado_pct",
+  IVA_MODO: "iva_modo",
 } as const;
