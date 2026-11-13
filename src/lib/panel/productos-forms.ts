@@ -147,13 +147,13 @@ export async function crearProductoForm(formData: FormData) {
       const fotoUrlDefinitiva = urlPublicaFotoProducto(rutaNueva);
       await actualizarProducto(productoCreado.id, { foto_url: fotoUrlDefinitiva });
     }
-
-    redirect("/panel/productos");
   } catch (error) {
     const mensaje =
       error instanceof Error ? error.message : String(error);
     throw new Error(`Error al crear el producto: ${mensaje}`);
   }
+
+  redirect("/panel/productos");
 }
 
 /**
@@ -263,13 +263,13 @@ export async function editarProductoForm(formData: FormData) {
         await upsertProductoMargen(id, margen ?? 0, precioFijo);
       }
     }
-
-    redirect("/panel/productos");
   } catch (error) {
     const mensaje =
       error instanceof Error ? error.message : String(error);
     throw new Error(`Error al editar el producto: ${mensaje}`);
   }
+
+  redirect("/panel/productos");
 }
 
 /**
@@ -281,10 +281,11 @@ export async function desactivarProductoForm(formData: FormData) {
   const id = Number(formData.get("id"));
   try {
     await desactivarProducto(id);
-    redirect("/panel/productos");
   } catch (error) {
     const mensaje =
       error instanceof Error ? error.message : String(error);
     throw new Error(`Error al desactivar el producto: ${mensaje}`);
   }
+
+  redirect("/panel/productos");
 }
