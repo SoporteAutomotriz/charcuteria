@@ -279,6 +279,12 @@ export async function desactivarProductoForm(formData: FormData) {
   'use server';
   await requirePanelAccess();
   const id = Number(formData.get("id"));
-  await desactivarProducto(id);
-  redirect("/panel/productos");
+  try {
+    await desactivarProducto(id);
+    redirect("/panel/productos");
+  } catch (error: any) {
+    throw new Error(
+      `Error al desactivar el producto: ${error?.message ?? String(error)}`,
+    );
+  }
 }
