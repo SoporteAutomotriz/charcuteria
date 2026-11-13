@@ -66,6 +66,33 @@ export function casoConPrecioFijo(): MotorEntrada {
   };
 }
 
+export function casoSinPrecioFijo(): MotorEntrada {
+  return {
+    items: [
+      {
+        productoId: "queso-manchego",
+        cantidadServida: "200",
+        categoriaId: "quesos",
+      },
+    ],
+    costosPrivados: {
+      "queso-manchego": {
+        costoUnitarioCompra: "40.00",
+        merma: "0.10",
+        factorConversion: "1",
+        margenPropioPct: "30",
+        // precio_fijo_manual es null: debe omitirse y usar el margen propio.
+        precioFijoManual: null,
+      },
+    },
+    categorias: {
+      quesos: { margenPct: "35" },
+    },
+    margenGlobalPct: "40",
+    ivaPct: "16",
+  };
+}
+
 export function casoConMargenCategoria(): MotorEntrada {
   return {
     items: [
@@ -312,6 +339,23 @@ type SalidaEsperada = {
  *    personas = ceil(invitados / invitadosPorPersona)
  */
 export const ESPERADOS: Record<string, SalidaEsperada> = {
+  "caso sin precio fijo": {
+    lineas: [
+      {
+        productoId: "queso-manchego",
+        cantidadServida: "200.00",
+        precioVentaLinea: "12698.41",
+        ivaLinea: "2031.75",
+        totalLinea: "14730.16",
+      },
+    ],
+    costoTransporte: "0.00",
+    costoMontaje: "0.00",
+    costoPersonal: "0.00",
+    subtotalVenta: "12698.41",
+    ivaTotal: "2031.75",
+    totalConIva: "14730.16",
+  },
   "caso simple": {
     lineas: [
       {

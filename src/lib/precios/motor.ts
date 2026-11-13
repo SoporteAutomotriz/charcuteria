@@ -50,8 +50,8 @@ export interface CostoProductoPrivado {
   factorConversion: string;
   /** Margen propio del producto (0 a 100), opcional. */
   margenPropioPct?: string;
-  /** Precio fijo manual; si existe, prevalece sobre cualquier margen. */
-  precioFijoManual?: string;
+  /** Precio fijo manual; si existe y no es null, prevalece sobre cualquier margen. */
+  precioFijoManual?: string | null;
 }
 
 export interface CategoriaParametros {

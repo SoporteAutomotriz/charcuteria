@@ -205,7 +205,7 @@ export async function enviarSolicitud(formData: FormData) {
       ...(margen?.margen_propio_pct !== undefined
         ? { margen_propio_pct: String(margen.margen_propio_pct) }
         : {}),
-      ...(margen?.precio_fijo_manual !== undefined
+      ...(margen?.precio_fijo_manual != null
         ? { precio_fijo_manual: String(margen.precio_fijo_manual) }
         : {}),
     });

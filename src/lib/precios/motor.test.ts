@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { cotizar, paraCliente } from "./motor";
 import {
   casoSimple,
+  casoSinPrecioFijo,
   casoConPrecioFijo,
   casoConMargenCategoria,
   casoConMargenGlobal,
@@ -19,6 +20,14 @@ describe("Motor de precios determinista (Fase 3)", () => {
       const salida = cotizar(casoSimple());
       const cliente = paraCliente(salida);
       expect(cliente).toEqual(ESPERADOS["caso simple"]);
+    });
+  });
+
+  describe("caso sin precio fijo manual (valor null)", () => {
+    it("omite el precio fijo y usa el margen propio del producto", () => {
+      const salida = cotizar(casoSinPrecioFijo());
+      const cliente = paraCliente(salida);
+      expect(cliente).toEqual(ESPERADOS["caso sin precio fijo"]);
     });
   });
 
