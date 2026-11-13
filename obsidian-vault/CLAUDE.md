@@ -15,10 +15,11 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Cambios de "eliminar producto" y "estado al editar" comiteados y pusheados a main (commit 396afdb).
+Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Corrección de React #441 (hidratación) y tokens inconsistentes en cotización pública (commit 307d0a3), comiteado en main.
 
 ### Working
 
+- `main` y `origin/main` sincronizadas (commit 7a607ad pusheado, corrección React #441 y tokens en cotización pública)
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
@@ -32,7 +33,8 @@ Update this section every time you return to this vault. **Last updated:** 13-11
 - Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 - Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
-- Cambios recientes (main, pusheados):
+- Cambios recientes (main, pusheados hasta 74ef46e; 307d0a3 comiteado localmente, pendiente de push):
+  - Commit 307d0a3: fix React #441 (hidratación) y tokens inconsistentes en cotización pública — CarritoFijo lee borrador solo en cliente, ResumenForm lee borrador solo en cliente con suppressHydrationWarning, ResumenPage usa dynamic = "force-dynamic".
   - Commit 396afdb: `eliminarProducto()` en `src/lib/panel/productos.ts`; `eliminarProductoForm()` en `src/lib/panel/productos-forms.ts`; botón "Eliminar" (solo propietario) en `src/app/panel/(panel)/productos/page.tsx`; corregido cambio de estado al editar en `src/app/panel/(panel)/productos/[id]/editar/page.tsx` (eliminado input oculto duplicado `name="estado"`).
   - Commit 37cf5c5: agregados `margen_global_pct` e `iva_pct` al formulario de parámetros predefinidos en `/panel/parametros` (editable solo por propietario).
   - Commit b585ede: restaurado CRUD completo de `/panel/categorias` accesible para ambos roles (propietario y administrador) vía `requirePanelAccess`; agregado al menú de navegación del panel.
