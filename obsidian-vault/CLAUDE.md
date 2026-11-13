@@ -32,12 +32,10 @@ Update this section every time you return to this vault. **Last updated:** 13-11
 - Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 - Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
-- Cambios recientes (main, commit 396afdb, pusheado):
-  - `eliminarProducto()` en `src/lib/panel/productos.ts` — eliminación física de producto
-  - `eliminarProductoForm()` en `src/lib/panel/productos-forms.ts` — Server Action, solo propietario, con `redirect` fuera del try/catch
-  - Botón "Eliminar" en `src/app/panel/(panel)/productos/page.tsx` — visible solo para rol propietario, formulario oculto por fila
-  - Corregido cambio de estado al editar en `src/app/panel/(panel)/productos/[id]/editar/page.tsx` — eliminado input oculto duplicado `name="estado"`, select con `defaultValue={producto.estado}`
-  - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes del push
+- Cambios recientes (main, pusheados):
+  - Commit 396afdb: `eliminarProducto()` en `src/lib/panel/productos.ts`; `eliminarProductoForm()` en `src/lib/panel/productos-forms.ts`; botón "Eliminar" (solo propietario) en `src/app/panel/(panel)/productos/page.tsx`; corregido cambio de estado al editar en `src/app/panel/(panel)/productos/[id]/editar/page.tsx` (eliminado input oculto duplicado `name="estado"`).
+  - Commit 37cf5c5: `/panel/categorias` deshabilitado para todos los roles (siempre redirige al inicio del panel); agregados `margen_global_pct` e `iva_pct` al formulario de parámetros predefinidos en `/panel/parametros` (editable solo por propietario).
+  - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ### Entregables fase fotos (comiteados, sin push)
 

@@ -17,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/panel", label: "Inicio" },
   { href: "/panel/cotizaciones", label: "Cotizaciones" },
   { href: "/panel/productos", label: "Productos" },
+  { href: "/panel/categorias", label: "Categorías" },
   { href: "/panel/paquetes", label: "Paquetes" },
   { href: "/panel/tarifas", label: "Tarifas" },
   { href: "/panel/parametros", label: "Parámetros", soloPropietario: true },
