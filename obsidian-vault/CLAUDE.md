@@ -43,6 +43,7 @@ Update this section every time you return to this vault. **Last updated:** 13-11
   - Commit 05c23b6: corregido error al editar paquete (invalid input syntax for type bigint: "NaN") — `await params` en `PaqueteEditarPage` (Next.js 15, params es Promise).
   - Commit 8b0ddc7: corregido redirect tras eliminar componente de paquete — ahora vuelve a `/panel/paquetes/[id]/editar` en lugar del listado general.
   - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar.
+  - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente.
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ### Entregables fase fotos (comiteados, sin push)
