@@ -6,12 +6,12 @@
  * junto con el formulario al Server Action enviarSolicitud.
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useBorrador, limpiarBorrador } from "@/lib/cotizar/store";
 import { validarBorradorCompleto, borradorEsValido } from "@/lib/cotizar/validaciones";
-import { enviarSolicitud, generarIdempotencyCookie } from "@/app/cotizar/action";
+import { enviarSolicitud } from "@/app/cotizar/action";
 
 interface ResumenFormProps {
   idempotencyKey: string;
@@ -29,14 +29,10 @@ export default function ResumenForm({
   const [enviado, setEnviado] = useState<boolean>(false);
   const [enviando, setEnviando] = useState<boolean>(false);
 
-  // Establecer la cookie httpOnly con la clave de idempotencia antes de enviar.
-  // Se debe hacer desde el cliente porque cookies().set() no está permitido
-  // durante el render de un Server Component en Next.js 15.
-  useEffect(() => {
-    generarIdempotencyCookie(idempotencyKey).catch(() => {
-      // Si falla, el envío ya dará error de idempotencia y se mostrará al usuario
-    });
-  }, [idempotencyKey]);
+  // La clave de idempotencia y su cookie httpOnly ya fueron establecidas por
+  // el servidor en ResumenPage. El formulario solo la reenvía; no hay
+  // sincronización asíncrona del cliente que pueda desincronizar la clave
+  // del input hidden con la cookie (error "Clave de idempotencia inválida").
 
   const resultados = validarBorradorCompleto(borrador);
   const todosValidos = borradorEsValido(borrador);
