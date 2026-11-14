@@ -15,11 +15,11 @@ Cotizador de tablas de charcutería y quesos para eventos. Sitio web en español
 
 ## Current State
 
-Update this section every time you return to this vault. **Last updated:** 13-11-2026 — Fix [big.js] Invalid number: precio_fijo_manual=null se omite y se usa el margen propio (commit 63c3776 en main local, push pendiente por falta de conectividad a github.com).
+Update this section every time you return to this vault. **Last updated:** 14-11-2026 — Fix cantidad inicial en configurador = porcion_referencia_persona x invitados (commit faa56a6), push exitoso a origin/main.
 
 ### Working
 
-- `main` y `origin/main` sincronizadas hasta commit c7c87a6 (pusheado). Commit 63c3776 local no pusheado: `fatal: unable to access github.com port 443: Could not connect to server`.
+- `main` y `origin/main` sincronizadas (commit faa56a6 pusheado). Todos los 4 commits locales ya están en el remoto: 63c3776, e7e93ff, 73dd01a, faa56a6.
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
@@ -33,7 +33,7 @@ Update this section every time you return to this vault. **Last updated:** 13-11
 - Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 - Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
-- Cambios recientes (main, pusheados hasta a30b82a):
+- Cambios recientes (main, pusheados hasta faa56a6):
   - Commit a30b82a: fix idempotency key generada una sola vez al entrar al flujo de cotización — middleware.ts genera y guarda cookie httpOnly idempotency_key la primera vez que el cliente entra a /cotizar (sobrevive a recargas y navegaciones); resumen/page.tsx lee la clave existente del request en lugar de regenerarla; resumen-form.tsx ya no toca cookies. Corrige error "Clave de idempotencia inválida" en POST /cotizar/resumen.
   - Commit 8b9d4b5: fix idempotency key desincronizada (cookie desde Server Component en ResumenPage). (Posteriormente reemplazado por a30b82a que mueve la generación al middleware para que sea una sola vez al entrar al flujo.)
   - Commit dfa1cc6: fix React #185 bucle infinito en useSyncExternalStore del borrador — leerBorrador() cachea snapshot parseado para referencia estable entre renders; guardarBorrador() y limpiarBorrador() invalidan el cache.
@@ -50,7 +50,10 @@ Update this section every time you return to this vault. **Last updated:** 13-11
   - Commit 8b0ddc7: corregido redirect tras eliminar componente de paquete — ahora vuelve a `/panel/paquetes/[id]/editar` en lugar del listado general.
   - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar. (Posteriormente reemplazado por middleware que establece la cookie una sola vez al entrar al flujo, commits 8b9d4b5 y a30b82a.)
   - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente. (Posteriormente reemplazado por commits 8b9d4b5 y a30b82a.)
-  - Commit 63c3776 (LOCAL, no pusheado): fix [big.js] Invalid number cuando precio_fijo_manual es null — action.ts omite precio_fijo_manual cuando es null/undefined (cambio `!== undefined` → `!= null`); motor.ts tipa precioFijoManual como `string | null`; agregado casoSinPrecioFijo y test en motor.test.ts. Costo y margen propios siguen obligatorios con mensaje claro si faltan.
+  - Commit 63c3776: fix [big.js] Invalid number cuando precio_fijo_manual es null — action.ts omite precio_fijo_manual cuando es null/undefined; motor.ts tipa precioFijoManual como `string | null`; agregado casoSinPrecioFijo y test en motor.test.ts. Costo y margen propios siguen obligatorios con mensaje claro si faltan.
+  - Commit e7e93ff: fix [big.js] Invalid number cuando merma_pct se interpreta como fracción cruda — motor.ts usa pctAFactor(costo.merma) en vez de toBig(costo.merma); casos de prueba usan formato entero (merma: "10" en vez de "0.10").
+  - Commit 73dd01a: feat(panel): editar merma_pct en la página de edición de producto — convierte input hidden a input visible tipo number (min 0, max 100).
+  - Commit faa56a6: feat(cotizar): cantidad inicial de producto = porcion_referencia_persona x invitados — /api/productos-publicos devuelve porcion_referencia_persona; ingredientes/page.tsx calcula cantidad inicial como porcion (g) x invitados / 1000 con fallback a 1.
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ### Entregables fase fotos (comiteados, sin push)
@@ -66,7 +69,7 @@ Commits en rama fase-fotos-productos-paquetes:
 
 ### Working
 
-- `main` y `origin/main` sincronizadas hasta commit c7c87a6 (pusheado). Commit 63c3776 local no pusheado: `fatal: unable to access github.com port 443: Could not connect to server`.
+- `main` y `origin/main` sincronizadas (commit faa56a6 pusheado). Todos los 4 commits locales ya están en el remoto: 63c3776, e7e93ff, 73dd01a, faa56a6.
 - Proyecto base Next.js creado en `C:\Users\Soporte\Documents\charcuteria`
 - `npm run typecheck` en verde (tsc --noEmit sin errores)
 - `npm run lint` en verde (ESLint sin errores; solo warnings preexistentes no relacionados)
@@ -80,7 +83,7 @@ Commits en rama fase-fotos-productos-paquetes:
 - Fase 5 completa: configurador público del cliente (8 pasos, móvil primero) con idempotency key, folio único, token privado, página pública sin datos de contacto
 - Fase 6 completa: panel del propietario para cotizaciones (bandeja, detalle, cambio de estado, descuentos, pagos, enlaces privados)
 - Fase fotos (productos): subida de fotos de productos a Supabase Storage — bucket público "productos" (5MB, JPEG/PNG/WebP), RLS lectura pública/escritura autenticada, componentes FotoInput, Server Actions crear/editar producto con foto, página de edición [id]/editar — comiteado en commit 4374483 en rama fase-fotos-productos-paquetes
-- Cambios recientes (main, pusheados hasta c7c87a6):
+- Cambios recientes (main, pusheados hasta faa56a6):
   - Commit c7c87a6: fix React #441 (hidratación) en todas las páginas del configurador — useSyncExternalStore vía useBorrador() en carrito-fijo, resumen-form, evento, paquete, servicios, lugar, ingredientes y contacto; eliminación de leerBorrador() sin importar y de useEffect/useState sin usar
   - Commit 307d0a3: fix React #441 (hidratación) y tokens inconsistentes en cotización pública — CarritoFijo lee borrador solo en cliente, ResumenForm lee borrador solo en cliente con suppressHydrationWarning, ResumenPage usa dynamic = "force-dynamic".
   - Commit 396afdb: `eliminarProducto()` en `src/lib/panel/productos.ts`; `eliminarProductoForm()` en `src/lib/panel/productos-forms.ts`; botón "Eliminar" (solo propietario) en `src/app/panel/(panel)/productos/page.tsx`; corregido cambio de estado al editar en `src/app/panel/(panel)/productos/[id]/editar/page.tsx` (eliminado input oculto duplicado `name="estado"`).
@@ -93,8 +96,11 @@ Commits en rama fase-fotos-productos-paquetes:
   - Commit 05c23b6: corregido error al editar paquete (invalid input syntax for type bigint: "NaN") — `await params` en `PaqueteEditarPage` (Next.js 15, params es Promise).
   - Commit 8b0ddc7: corregido redirect tras eliminar componente de paquete — ahora vuelve a `/panel/paquetes/[id]/editar` en lugar del listado general.
   - Commit abf8c62: corregido error de cookies en `/cotizar/resumen` (Next.js 15) — `cookies().set()` movido de Server Component a Server Action `generarIdempotencyCookie()`, invocada desde el cliente al montar.
-  - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente.
-  - Commit 63c3776 (LOCAL, no pusheado): fix [big.js] Invalid number cuando precio_fijo_manual es null — action.ts omite precio_fijo_manual cuando es null/undefined; motor.ts tipa precioFijoManual como `string | null`; agregado casoSinPrecioFijo y test en motor.test.ts. Costo y margen propios siguen obligatorios con mensaje claro si faltan.
+  - Commit 74ef46e: corregido error "Clave de idempotencia inválida" — el Server Action recibe la clave generada en `ResumenPage` como parámetro en lugar de crear una nueva al montar el cliente. (Posteriormente reemplazado por commits 8b9d4b5 y a30b82a.)
+  - Commit 63c3776: fix [big.js] Invalid number cuando precio_fijo_manual es null — action.ts omite precio_fijo_manual cuando es null/undefined; motor.ts tipa precioFijoManual como `string | null`; agregado casoSinPrecioFijo y test en motor.test.ts. Costo y margen propios siguen obligatorios con mensaje claro si faltan.
+  - Commit e7e93ff: fix [big.js] Invalid number cuando merma_pct se interpreta como fracción cruda — motor.ts usa pctAFactor(costo.merma) en vez de toBig(costo.merma); casos de prueba usan formato entero (merma: "10" en vez de "0.10").
+  - Commit 73dd01a: feat(panel): editar merma_pct en la página de edición de producto — convierte input hidden a input visible tipo number (min 0, max 100).
+  - Commit faa56a6: feat(cotizar): cantidad inicial de producto = porcion_referencia_persona x invitados — /api/productos-publicos devuelve porcion_referencia_persona; ingredientes/page.tsx calcula cantidad inicial como porcion (g) x invitados / 1000 con fallback a 1.
   - `npm run typecheck`, `npm run lint` y `npm run build` en verde antes de cada push.
 
 ## Key Decisions Made
