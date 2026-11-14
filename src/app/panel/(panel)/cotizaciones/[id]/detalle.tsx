@@ -175,7 +175,7 @@ export default function CotizacionDetalle({
       const nombre = formData.get("nombre_cliente") as string;
 
       const res = await fetch(
-        `/api/cotizaciones/${cotizacion.id}/enviar`,
+        `/api/cotizaciones/enviar/${cotizacion.id}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

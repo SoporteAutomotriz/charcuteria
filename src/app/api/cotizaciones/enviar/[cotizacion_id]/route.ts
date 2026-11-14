@@ -24,12 +24,12 @@ interface EnviarCotizacionBody {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
+  { params }: { params: Promise<{ cotizacion_id: string }> },
 ) {
   await requirePropietario();
 
-  const { id } = await params;
-  const cotizacionId = Number(id);
+  const { cotizacion_id } = await params;
+  const cotizacionId = Number(cotizacion_id);
 
   const supabase = await createClient();
 
