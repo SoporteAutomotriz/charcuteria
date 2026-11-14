@@ -17,6 +17,8 @@ interface ProductoOpcion {
   nombre: string;
   categoria: string | null;
   activo: boolean;
+  /** Porción de referencia por persona en gramos (ej. 30, 40, 25). */
+  porcion_referencia_persona: number | null;
 }
 
 interface CategoriaOpcion {
@@ -60,6 +62,17 @@ export default function IngredientesPage() {
           (p) => p.categoria === categoriaFiltro || String(p.id) === categoriaFiltro,
         );
 
+  const invitados = borrador.evento?.invitados ?? 1;
+
+  /** Calcula la cantidad inicial sugerida: porción por persona × invitados.
+   *  La porción viene en gramos; se asume unidad de venta en kg (÷1000).
+   *  Si no hay porción configurada ni invitados, se usa 1 como fallback.
+   */
+  const cantidadInicial = (p: ProductoOpcion): number => {
+    if (!p.porcion_referencia_persona || !invitados) return 1;
+    return Math.round((p.porcion_referencia_persona * invitados) / 1000 * 100) / 100;
+  };
+
   const cantidadDe = (id: number) =>
     carrito.find((p) => p.productoId === id)?.cantidadServida ?? 0;
 
@@ -71,7 +84,16 @@ export default function IngredientesPage() {
           p.productoId === id ? { ...p, cantidadServida: p.cantidadServida + 1 } : p,
         );
       }
-      return [...prev, { productoId: id, cantidadServida: 1 }];
+      const producto = productos.find((p) => p.id === id);
+      return [
+        ...prev,
+        {
+          productoId: id,
+          cantidadServida: producto
+            ? cantidadInicial(producto)
+            : 1,
+        },
+      ];
     });
   };
 

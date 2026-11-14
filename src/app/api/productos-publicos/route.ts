@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("productos")
-    .select("id, nombre, categoria_id, estado")
+    .select("id, nombre, categoria_id, estado, porcion_referencia_persona")
     .eq("estado", "activo")
     .order("nombre", { ascending: true });
 
@@ -28,6 +28,7 @@ export async function GET() {
       nombre: p.nombre,
       categoria: String(p.categoria_id ?? ""),
       activo: p.estado === "activo",
+      porcion_referencia_persona: p.porcion_referencia_persona ?? null,
     })),
   );
 }
